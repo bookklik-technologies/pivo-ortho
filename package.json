@@ -1,0 +1,37 @@
+{
+  "name": "pivo-ortho",
+  "version": "0.8.0",
+  "license": "MIT",
+  "author": "a-hakim",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "test:browser": "playwright test",
+    "preview": "vite preview --host 0.0.0.0",
+    "examples": "esbuild tools/generate-examples.ts --bundle --platform=node --format=cjs --outfile=tools/generate-examples.cjs && node tools/generate-examples.cjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/outfit": "^5.3.0",
+    "fflate": "^0.8.2",
+    "gifenc": "^1.0.3",
+    "lucide-react": "^1.55.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@types/three": "^0.180.0",
+    "esbuild": "^0.28.2",
+    "gifuct-js": "^2.1.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.9",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,33 @@
+import {describe,it,expect} from 'vitest';
+import {createProject,createPrimitive,createClip,evaluateMesh,History} from '../src/core';
+import {libraryClip,sampleClipGesture,clipTimingChanged,laneAt,pointerTime,animationLocked,animationWithPreview,snapTime} from '../src/ui/timeline';
+const clip=()=>({...createClip('mesh','movement',0),start:1,duration:2});
+describe('Timeline gesture math',()=>{
+ it('Library clips preserve requested lane and snap their start',()=>{const c=libraryClip('mesh','movement',2,1.137,5,0.05);expect(c.track).toBe(2);expect(c.start).toBe(1.15);expect(c.duration).toBe(1)});
+ it('Each library type has a complete valid authored clip',()=>{for(const t of ['movement','rotation','scale','visibility','oscillation'] as const){const c=libraryClip('m',t,0,0,4);expect(c.type).toBe(t);expect(Number.isFinite(c.amount)).toBe(true);expect(c.duration).toBeGreaterThan(0)}});
+ it('Library drop at end shifts left to fit',()=>{const c=libraryClip('m','rotation',3,9,4);expect(c.start).toBe(3);expect(c.start+c.duration).toBe(4)});
+ it('Short timelines still produce a bounded clip',()=>{const c=libraryClip('m','scale',0,0.05,0.1);expect(c.start).toBe(0);expect(c.duration).toBe(0.1)});
+ it('Move preserves duration and changes track',()=>{const a=clip(),b=sampleClipGesture(a,'move',2.23,3,8,0.1);expect(b.start).toBe(2.2);expect(b.duration).toBe(2);expect(b.track).toBe(3);expect(a.start).toBe(1);expect(a.track).toBe(0)});
+ it('Moving does not progressively accumulate rounding errors',()=>{const a=clip();const near=sampleClipGesture(a,'move',2.031,0,8,0.05);const far=sampleClipGesture(a,'move',3.011,0,8,0.05);expect(near.start).toBe(2.05);expect(far.start).toBe(3);expect(a.start).toBe(1)});
+ it('Movement clips to nonnegative start and timeline end',()=>{const a=clip();expect(sampleClipGesture(a,'move',-3,1,4).start).toBe(0);expect(sampleClipGesture(a,'move',8,1,4).start).toBe(2)});
+ it('Existing overlength duration is preserved on a move',()=>{const a={...clip(),duration:9};const b=sampleClipGesture(a,'move',2,2,4);expect(b.duration).toBe(9);expect(b.start).toBe(0)});
+ it('Left resize holds the right edge exactly',()=>{const a=clip(),b=sampleClipGesture(a,'left',1.5,2,8);expect(b.start).toBe(1.5);expect(b.duration).toBe(1.5);expect(b.start+b.duration).toBe(a.start+a.duration);expect(b.track).toBe(a.track)});
+ it('Left resize can extend to zero but not beyond',()=>{const b=sampleClipGesture(clip(),'left',-5,0,8);expect(b.start).toBe(0);expect(b.duration).toBe(3)});
+ it('Left edge cannot invert or erase a clip',()=>{const b=sampleClipGesture(clip(),'left',99,0,8);expect(b.start).toBe(2.95);expect(b.duration).toBe(0.05)});
+ it('Right resize holds the start and original track',()=>{const a=clip(),b=sampleClipGesture(a,'right',4.5,3,8);expect(b.start).toBe(1);expect(b.duration).toBe(3.5);expect(b.track).toBe(0)});
+ it('Right edge stops at the visible timeline end',()=>{expect(sampleClipGesture(clip(),'right',99,0,4).duration).toBe(3)});
+ it('Right edge has a minimum positive duration',()=>{expect(sampleClipGesture(clip(),'right',-2,0,4).duration).toBe(0.05)});
+ it('Ctrl/Command disables snap without disabling clamping',()=>{const a=clip(),b=sampleClipGesture(a,'move',1.037,2,8,0.5,true);expect(b.start).toBe(1.037);expect(snapTime(1.037,0.5)).toBe(1);expect(sampleClipGesture(a,'move',-1,0,8,0.5,true).start).toBe(0)});
+ it('Zero snap supports fine-grained times',()=>{expect(sampleClipGesture(clip(),'move',1.034,1,8,0).start).toBe(1.034)});
+ it('Invalid numeric coordinates/tracks are rejected',()=>{expect(()=>sampleClipGesture(clip(),'move',NaN,0,4)).toThrow(/finite/);expect(()=>sampleClipGesture(clip(),'move',1,4,4)).toThrow(/Track/);expect(()=>libraryClip('m','movement',0,0,0)).toThrow()});
+ it('Timing comparisons identify no-op and lane-only moves',()=>{const a=clip();expect(clipTimingChanged(a,{...a})).toBe(false);expect(clipTimingChanged(a,{...a,track:1})).toBe(true)});
+});
+describe('Drop geometry and preview isolation',()=>{
+ const rects=[{track:0,left:10,right:210,top:10,bottom:40},{track:1,left:10,right:210,top:44,bottom:74}];
+ it('Pointer x maps to timeline time',()=>expect(pointerTime(rects[0],110,4)).toBe(2));
+ it('Nearest lane handles gaps but never accepts an outside library drop',()=>{expect(laneAt(rects,100,41)?.track).toBe(0);expect(laneAt(rects,100,50)?.track).toBe(1);expect(laneAt(rects,300,50)).toBeNull();expect(laneAt(rects,100,100)).toBeNull();expect(laneAt(rects,300,50,true)?.track).toBe(1)});
+ it('Mesh and folder locks both prevent animation editing',()=>{const p=createProject(),m=createPrimitive('cube');p.meshes=[m];expect(animationLocked(p,m.id)).toBe(false);m.locked=true;expect(animationLocked(p,m.id)).toBe(true);m.locked=false;m.folderId='f';p.folders=[{id:'f',name:'Folder',visible:true,locked:true}];expect(animationLocked(p,m.id)).toBe(true);expect(animationLocked(p,'missing')).toBe(true)});
+ it('Preview can replace an existing clip without mutating durable state',()=>{const p=createProject(),m=createPrimitive('cube');p.meshes=[m];const c=libraryClip(m.id,'movement',0,0,4);p.animation.clips=[c];const preview=animationWithPreview(p,{...c,start:2});expect(p.animation.clips[0].start).toBe(0);expect(preview.animation.clips[0].start).toBe(2);expect(preview.meshes).toBe(p.meshes)});
+ it('Library ghost is evaluated by live preview without being saved',()=>{const p=createProject(),m=createPrimitive('cube');p.meshes=[m];const ghost=libraryClip(m.id,'movement',0,0,4);const preview=animationWithPreview(p,ghost);expect(p.animation.clips.length).toBe(0);expect(evaluateMesh(m,preview.animation,1).position[1]).toBe(1);expect(evaluateMesh(m,p.animation,1).position[1]).toBe(0)});
+ it('One final history transaction restores every timing field on undo',()=>{const p=createProject(),m=createPrimitive('cube');p.meshes=[m];const c=libraryClip(m.id,'movement',0,0,4);p.animation.clips=[c];const h=new History(p),next=sampleClipGesture(c,'move',2,3,4);h.commit('Move clip',draft=>Object.assign(draft.animation.clips[0],next));expect(h.current.animation.clips[0].track).toBe(3);expect(h.undo().animation.clips[0]).toEqual(c);expect(h.redo().animation.clips[0]).toEqual(next)});
+});

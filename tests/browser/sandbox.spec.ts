@@ -1,0 +1,23 @@
+import {test,expect} from '@playwright/test';
+import {readFile} from 'node:fs/promises';
+test('Published-style sandbox can open and edit export cameras without storage access',async({page})=>{
+ const html=await readFile('pivo-ortho-browser.html','utf8');
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.setContent('<iframe id="preview" sandbox="allow-scripts allow-downloads" style="width:1400px;height:900px;border:0"></iframe>');
+ await page.locator('#preview').evaluate((frame,source)=>{(frame as HTMLIFrameElement).srcdoc=source},html);
+ const editor=page.frameLocator('#preview');
+ await expect(editor.getByRole('button',{name:'Model',exact:true})).toBeVisible();
+ const font=await editor.locator('body').evaluate(async element=>{await document.fonts.ready;return {family:getComputedStyle(element).fontFamily,loaded:[...document.fonts].some(f=>f.family.includes('Outfit')&&f.status==='loaded')}});expect(font.family).toContain('Outfit');expect(font.loaded).toBe(true);
+ await expect(editor.getByLabel('Save project',{exact:true}).locator('svg.lucide')).toHaveCount(1);
+ await expect(editor.locator('html')).toHaveAttribute('data-theme','light');await editor.getByLabel('Switch to dark theme',{exact:true}).click();await expect(editor.locator('html')).toHaveAttribute('data-theme','dark');await editor.getByLabel('Switch to light theme',{exact:true}).click();
+ await editor.getByLabel('Exports',{exact:true}).click();
+ await editor.getByRole('tab',{name:'Rendered PNG',exact:true}).click();
+ await expect(editor.getByLabel('Live export camera preview')).toBeVisible();
+ await editor.getByLabel('Export camera projection').selectOption('orthographic');
+ await editor.getByLabel('Export camera orthographic height').fill('5');
+ await editor.getByLabel('Enable outline').check();
+ await editor.getByLabel('Left text tag').fill('LAB');
+ await expect(editor.locator('.fatal')).toHaveCount(0);
+ await expect(editor.getByRole('alert')).toHaveCount(0);
+ expect(errors).toEqual([]);
+});
