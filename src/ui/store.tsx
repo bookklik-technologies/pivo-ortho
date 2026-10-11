@@ -46,7 +46,7 @@ export interface UiState {
   viewLayout: 'quad' | ViewKind; // maximize one view
   wireframe: boolean;
   status: string;
-  dialog: null | 'shortcuts' | 'exports' | 'help' | 'recovery' | 'settings';
+  dialog: null | 'shortcuts' | 'exports' | 'help' | 'about' | 'recovery' | 'settings';
   exporting: null | { label: string; progress: number; cancel: boolean };
   undoLabel: string;
   redoLabel: string;

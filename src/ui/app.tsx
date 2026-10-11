@@ -16,7 +16,7 @@ import { UVEditor, AnimateWorkspace } from './animateWorkspace';
 import { Outliner } from './outliner';
 import { Inspector } from './inspector';
 import { ExportsDialog } from './exportsDialog';
-import { ShortcutsDialog, HelpDialog, ErrorBoundary, WebGLFallback } from './dialogs';
+import { ShortcutsDialog, HelpDialog, ErrorBoundary, WebGLFallback } from './dialogs';import { AboutDialog } from './aboutDialog';
 import { collectFaces, projectToNdc } from './render';
 import { IconCube, IconExport, IconHelp, IconOpen, IconPaint, IconPlay, IconRedo, IconSave, IconUndo,IconKeyboard,IconCursor,IconMove,IconRotate,IconScale,IconSun,IconMoon } from './icons';
 
@@ -104,7 +104,7 @@ function Header({paintTab,onPaintTab,onResetViews}:{paintTab:string;onPaintTab:(
         <SuiteMenu label="File"><button onClick={newProject}>New project</button><button aria-label="Open project" onClick={()=>fileRef.current?.click()}>Open project…</button><button onClick={save}>Save project</button><button onClick={()=>dispatch({t:'setDialog',dialog:'exports'})}>Export…</button><button onClick={()=>dispatch({t:'setDialog',dialog:'recovery'})}>Recovery…</button></SuiteMenu>
         <SuiteMenu label="Edit"><button disabled={!history?.canUndo} onClick={doUndo}>Undo</button><button disabled={!history?.canRedo} onClick={doRedo}>Redo</button></SuiteMenu>
         <SuiteMenu label="View"><button onClick={onResetViews}>Reset workspace views</button><button onClick={()=>dispatch({t:'setLayout',layout:state.viewLayout==='quad'?'persp':'quad'})}>Four views / maximize 3D</button><button onClick={()=>document.querySelector<HTMLButtonElement>('.suite-dock-toggle')?.click()}>Toggle panels</button><button onClick={useSystem}>System appearance</button><button onClick={()=>{setTheme('light');applyTheme('light');saveTheme('light');}}>Light appearance</button><button onClick={()=>{setTheme('dark');applyTheme('dark');saveTheme('dark');}}>Dark appearance</button><button onClick={()=>document.querySelector('.app')?.classList.toggle('suite-diagnostics')}>Technical diagnostics</button></SuiteMenu>
-        <SuiteMenu label="Help"><button onClick={()=>dispatch({t:'setDialog',dialog:'shortcuts'})}>Keyboard shortcuts…</button><button onClick={()=>dispatch({t:'setDialog',dialog:'help'})}>About PiVo Ortho</button></SuiteMenu>
+        <SuiteMenu label="Help"><button onClick={()=>dispatch({t:'setDialog',dialog:'shortcuts'})}>Keyboard shortcuts…</button><button onClick={()=>dispatch({t:'setDialog',dialog:'help'})}>Usage help…</button><button onClick={()=>dispatch({t:'setDialog',dialog:'about'})}>About PiVo Ortho</button></SuiteMenu>
       </nav>
       <div className="suite-header-actions">
         <button onClick={doUndo} disabled={!history?.canUndo} aria-label="Undo" title="Undo (Ctrl/Cmd+Z)"><IconUndo/></button>
@@ -543,7 +543,7 @@ function AppInner(): React.JSX.Element {
       {toastMessage&&<div className="suite-toast" role="status">{toastMessage}</div>}
       {state.dialog==='recovery'&&<RecoveryDialog/>}
       {state.dialog === 'shortcuts' && <ShortcutsDialog onClose={() => dispatch({ t: 'setDialog', dialog: null })} />}
-      {state.dialog === 'help' && <HelpDialog onClose={() => dispatch({ t: 'setDialog', dialog: null })} />}
+      {state.dialog === 'help' && <HelpDialog onClose={() => dispatch({ t: 'setDialog', dialog: null })} />}{state.dialog === 'about' && <AboutDialog onClose={() => dispatch({ t: 'setDialog', dialog: null })} />}
       {state.dialog === 'exports' && <ExportsDialog cameraRig={rig} currentView={activeView} onClose={() => dispatch({ t: 'setDialog', dialog: null })} />}
     </div>
   );
