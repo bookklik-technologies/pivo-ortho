@@ -6,8 +6,8 @@ import { useStore } from './store';
 const SHORTCUTS: Array<[string, string]> = [
   ['1 / 2 / 3', 'Model / Paint / Animate mode'],
   ['Q / W / E', 'Pick mesh / face / vertex'],
-  ['Select / Move buttons', 'Select/Move/Rotate/Scale handles; exact numeric transforms in inspector'],
-  ['B / E / F / L / R / C / M', 'Paint: pen, eraser, fill, line, rectangle, ellipse, marquee'],
+  ['V / T / R / S', 'Model: select, move, rotate, scale'],
+  ['B / E / F / L / R / C / M / I', 'Paint: pen, eraser, fill, line, rectangle, ellipse, marquee, eyedropper'],
   ['X', 'Delete face / mesh (context of selection)'],
   ['D', 'Duplicate selection'],
   ['Copy / Paste buttons', 'Context-specific mesh, UV, marquee and clip clipboard'],

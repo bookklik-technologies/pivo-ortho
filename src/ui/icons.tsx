@@ -1,6 +1,6 @@
 // Locally bundled Lucide icon adapters. Paths are supplied by lucide-react.
 import React from 'react';
-import {ArrowDown, ArrowLeft, ArrowLeftRight, ArrowRight, ArrowUp, Box, Boxes, Circle, CircleHelp, Copy, Download, Eraser, Eye, EyeOff, Folder, FolderOpen, Grid2X2, Keyboard, LockKeyhole, LockKeyholeOpen, Maximize2, Merge, MousePointer2, Move, PaintBucket, Paintbrush, Pause, Pencil, Pipette, Play, Plus, RectangleHorizontal, Redo2, RotateCw, Save, Scaling, Scan, ScanLine, Slash, Square, Trash2, Undo2, X,Sun,Moon,type LucideIcon} from 'lucide-react';
+import {ArrowDown, ArrowLeft, ArrowLeftRight, ArrowRight, ArrowUp, Box, Boxes, Circle, CircleHelp, Copy, Download, Ellipsis, Eraser, Eye, EyeOff, Folder, FolderOpen, Grid2X2, Keyboard, LockKeyhole, LockKeyholeOpen, Maximize2, Merge, MousePointer2, Move, PaintBucket, Paintbrush, Pause, Pencil, Pipette, Play, Plus, RectangleHorizontal, Redo2, RotateCw, Save, Scaling, Scan, ScanLine, Slash, Square, Trash2, Undo2, Waves, X,Sun,Moon,type LucideIcon} from 'lucide-react';
 
 const icon=(Component:LucideIcon)=>(props:React.SVGProps<SVGSVGElement>)=><Component size={16} strokeWidth={1.8} aria-hidden="true" focusable="false" {...props}/>;
 export const IconCube=icon(Box);
@@ -11,6 +11,7 @@ export const IconCursor=icon(MousePointer2);
 export const IconMove=icon(Move);
 export const IconRotate=icon(RotateCw);
 export const IconScale=icon(Scaling);
+export const IconOscillate=icon(Waves);
 export const IconPen=icon(Pencil);
 export const IconEraser=icon(Eraser);
 export const IconFill=icon(PaintBucket);
@@ -45,6 +46,7 @@ export const IconSwap=icon(ArrowLeftRight);
 export const IconKeyboard=icon(Keyboard);
 export const IconClose=icon(X);
 export const IconMerge=icon(Merge);
+export const IconMore=icon(Ellipsis);
 export const IconArrowUp=icon(ArrowUp);
 export const IconArrowDown=icon(ArrowDown);
 export const IconArrowLeft=icon(ArrowLeft);

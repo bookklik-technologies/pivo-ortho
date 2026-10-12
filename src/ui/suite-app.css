@@ -12,7 +12,7 @@
 .suite-dock .row-actions button{min-width:28px;min-height:32px;padding:4px}.suite-dock .row-actions button:has(svg){width:28px}
 .model-center{min-width:0;flex:1}.model-toolbar{height:44px;min-height:44px;flex:none;flex-wrap:nowrap;gap:12px;padding:6px 16px;overflow:visible}
 .model-toolbar .setting-cluster{display:flex;flex-wrap:nowrap;align-items:center;gap:8px}
-.model-toolbar .setting-cluster label{display:flex;flex-direction:row;font-size:12px;gap:5px}
+.model-toolbar .setting-cluster label{display:flex;flex-direction:row;font-size:12px;gap:5px;align-items:center}
 .model-toolbar input[type=number]{width:56px}
 .model-toolbar .control-cluster{padding:0;border:0}.model-view-options{margin-left:auto;flex:none}.model-view-options .suite-menu-popup{right:0;left:auto}.model-view-options .control-cluster{flex-wrap:wrap}
 .model-workspace{min-height:0;min-width:0;flex:1}
@@ -39,7 +39,7 @@
 @media(max-width:880px){.app-main>.suite-dock{position:absolute;top:0;bottom:0;right:0}.suite-document-strip .suite-tablist button{padding-inline:7px}.suite-document-name{display:none}.model-toolbar{overflow-x:auto;overflow-y:hidden}.model-toolbar:has(details[open]){overflow:visible}.paint-toolbar,.uv-toolbar,.animate-toolbar{font-size:11px}.suite-save-state{margin-left:auto}.dialog-backdrop{padding:12px}}
 @media(max-width:560px){.suite-document-strip .suite-tablist button svg{display:none}.suite-document-strip .suite-save-state{display:none}.suite-header{padding-inline:8px}.suite-dock-toggle{margin-left:auto}}
 
-.ortho-context-toolbar{height:44px;min-height:44px;flex:none;background:var(--pivo-raised);border-bottom:1px solid var(--pivo-border);z-index:35;position:relative}
+.ortho-context-toolbar{height:44px;min-height:44px;flex:none;background:var(--pivo-raised);border-bottom:1px solid var(--pivo-border);z-index:35;position:relative;}
 .ortho-context-toolbar>div{height:44px}.ortho-context-toolbar .model-toolbar,.ortho-context-toolbar .paint-toolbar,.ortho-context-toolbar .uv-toolbar,.ortho-context-toolbar .animate-toolbar{width:100%;height:44px;border:0;overflow:visible}
 .paint-workspace{grid-template-rows:30px minmax(0,1fr)}.paint-workspace>.suite-tool-rail{grid-row:1/3}.paint-workspace>.texture-help{grid-row:1}.paint-workspace>.paint-body{grid-row:2}
 .paint-side .palette-grid{grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}.paint-side .swatch{width:100%;height:32px;min-height:32px}.paint-side .scene-preview canvas{max-height:180px;object-fit:contain}
@@ -64,6 +64,28 @@
 .suite-export-dialog .dialog-body{padding:16px}
 @media(max-width:880px){.suite-document-meta .suite-document-name{display:block;max-width:120px}.suite-document-meta{gap:8px;overflow:hidden}}
 @media(max-width:560px){.suite-document-meta{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:0;flex:1}.suite-document-meta .suite-document-name,.suite-document-meta .suite-save-state{display:block;max-width:100%;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:14px;margin:0}.suite-document-strip .suite-tablist{flex:none}}
-.suite-dock .outliner .row{flex-wrap:nowrap}
-.suite-dock .outliner .tree-name{min-width:0;flex:1 1 0}
-.suite-dock .outliner .row-actions{flex:none;flex-wrap:nowrap}
+/* The hierarchy gives names priority; common state controls stay in each row. */
+.suite-dock .outliner{padding:12px}
+.suite-dock .outliner .row{flex-wrap:nowrap;gap:8px;min-height:32px;padding:2px 6px;border-radius:4px}
+.suite-dock .outliner .row:hover{background:color-mix(in srgb,var(--pivo-accent) 6%,var(--pivo-surface))}
+.suite-dock .outliner .mesh-row.selected{background:color-mix(in srgb,var(--pivo-accent) 12%,var(--pivo-surface));box-shadow:inset 2px 0 0 var(--pivo-accent)}
+.suite-dock .outliner .tree-name{min-width:0;flex:1 1 0;min-height:28px;gap:7px;font-size:12px;color:var(--pivo-text);border-radius:3px;outline-offset:-2px}
+.suite-dock .outliner .tree-name>svg{width:14px;height:14px;flex:none;color:var(--pivo-muted)}
+.suite-dock .outliner .tree-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.suite-dock .outliner .mesh-row.is-hidden .tree-name{color:var(--pivo-muted)}
+.suite-dock .outliner .mesh-row.active .tree-name{color:var(--pivo-accent);font-weight:600}
+.suite-dock .outliner .folder-row{margin-top:8px;border:0;font-weight:550}
+.suite-dock .outliner-folder .mesh-row{margin-left:12px}
+.suite-dock .outliner .row>input{flex:1;min-width:0;width:0}
+.suite-dock .outliner .row-actions{flex:none;flex-wrap:nowrap;gap:2px;align-items:center}
+.suite-dock .outliner .row-actions>button,.suite-dock .outliner .outliner-actions-menu>summary{display:flex;align-items:center;justify-content:center;flex:none;width:26px;min-width:26px;height:26px;min-height:26px;padding:5px;border:0;border-radius:4px;background:transparent;color:var(--pivo-muted)}
+.suite-dock .outliner .row-actions>button>svg,.suite-dock .outliner .outliner-actions-menu>summary>svg{width:15px;height:15px}
+.suite-dock .outliner .row-actions>button:hover:not(:disabled),.suite-dock .outliner .outliner-actions-menu>summary:hover,.suite-dock .outliner .outliner-actions-menu[open]>summary{background:var(--pivo-hover);color:var(--pivo-text)}
+.suite-dock .outliner .row-actions>.is-locked,.suite-dock .outliner .row-actions>.is-hidden{color:var(--pivo-accent)}
+.suite-dock .outliner .suite-menu-popup{min-width:192px}
+.suite-dock .outliner .suite-menu-popup button{width:100%;min-width:0;min-height:32px;padding:6px 10px;justify-content:flex-start;gap:8px;border:0}
+.suite-dock .outliner .suite-menu-popup button>svg{width:15px;height:15px}
+.outliner-menu-key{margin-left:auto;font-size:10px;color:var(--pivo-muted)}
+.outliner-menu-divider{height:1px;margin:4px 6px;background:var(--pivo-border)}
+.suite-dock .outliner .outliner-folder-setting{display:flex;flex-direction:column;gap:5px;padding:6px 10px;font-size:11px;color:var(--pivo-muted)}
+.suite-dock .outliner .outliner-folder-setting select{width:100%;max-width:none;min-height:30px;font-size:12px;padding:4px 6px}

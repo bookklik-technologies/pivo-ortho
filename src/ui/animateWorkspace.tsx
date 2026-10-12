@@ -12,7 +12,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Clip, UVEdit, Vec2,Project } from '../core/types';
 import { createClip, evaluateMesh, TEXTURE_SIZE, transformUV, uid } from '../core';
 import { useStore, clipboard } from './store';
-import { IconCopy, IconPause, IconPlay,IconArrowUp,IconArrowDown,IconArrowLeft,IconArrowRight,IconPlus } from './icons';
+import { IconCopy, IconPause, IconPlay,IconArrowUp,IconArrowDown,IconArrowLeft,IconArrowRight,IconMove,IconRotate,IconScale,IconEye,IconOscillate } from './icons';
 
 const TEX = TEXTURE_SIZE; // 128 — texture is square (TEX_W === TEX_H)
 
@@ -345,12 +345,12 @@ export function UVEditor({onPreview,dock,active,toolbar}:{onPreview?:(project:Pr
 
 // ============================== ANIMATE MODE ==============================
 
-const CLIP_LIBRARY: Array<{ type: Clip['type']; label: string; hint: string }> = [
-  { type: 'movement', label: 'Movement', hint: 'Additive world offset' },
-  { type: 'rotation', label: 'Rotation', hint: 'Additive rotation (radians)' },
-  { type: 'scale', label: 'Scale', hint: 'Multiplicative end scale' },
-  { type: 'visibility', label: 'Visibility', hint: 'Hidden during interval' },
-  { type: 'oscillation', label: 'Oscillation', hint: 'Sine cycles/sec' },
+const CLIP_LIBRARY: Array<{ type: Clip['type']; label: string; hint: string; icon: React.FC<React.SVGProps<SVGSVGElement>> }> = [
+  { type: 'movement', label: 'Movement', hint: 'Additive world offset', icon: IconMove },
+  { type: 'rotation', label: 'Rotation', hint: 'Additive rotation (radians)', icon: IconRotate },
+  { type: 'scale', label: 'Scale', hint: 'Multiplicative end scale', icon: IconScale },
+  { type: 'visibility', label: 'Visibility', hint: 'Hidden during interval', icon: IconEye },
+  { type: 'oscillation', label: 'Oscillation', hint: 'Sine cycles/sec', icon: IconOscillate },
 ];
 
 interface TimelineGesture {kind:ClipGestureKind|'library';original:Clip;preview:Clip;meshId:string;duration:number;grab:number;pointerId:number;capture:HTMLElement;downX:number;downY:number;moved:boolean;valid:boolean;returnToPlay:boolean}
@@ -554,7 +554,7 @@ export function AnimateWorkspace({dock,toolbar}:{dock:HTMLElement|null;toolbar:H
   }, [project.meshes, previewProject.animation, time]);
 
   return (
-    <div className="animate-workspace"><nav className="suite-tool-rail animate-tools" aria-label="Animation tools">{CLIP_LIBRARY.map(c=><button key={c.type} aria-label={`Add ${c.label} clip`} title={`Add ${c.label} clip`} disabled={!activeMesh||animationLocked(project,activeMesh.id)} onClick={()=>addClip(c.type)}><IconPlus/><span>{c.label.slice(0,1)}</span></button>)}</nav>
+    <div className="animate-workspace"><nav className="suite-tool-rail animate-tools" aria-label="Animation tools">{CLIP_LIBRARY.map(c=><button key={c.type} type="button" aria-label={`Add ${c.label} clip`} title={`Add ${c.label} clip`} disabled={!activeMesh||animationLocked(project,activeMesh.id)} onClick={()=>addClip(c.type)}><c.icon/><span aria-hidden="true">{c.label.slice(0,1)}</span></button>)}</nav>
       <DockPortal target={toolbar}><div className="animate-toolbar">
         <label className="inline-label" htmlFor="lane-mesh">Mesh
           <select
@@ -657,7 +657,7 @@ export function AnimateWorkspace({dock,toolbar}:{dock:HTMLElement|null;toolbar:H
           <button key={c.type} type="button" title={`${c.hint}. Click to add, or drag onto a track.`} disabled={!activeMesh||animationLocked(project,activeMesh.id)} data-library-type={c.type} aria-label={`+ ${c.label}`}
             onPointerDown={e=>{if(activeMesh)beginGesture(e,'library',libraryClip(activeMesh.id,c.type,0,0,anim.duration,timelineSnap))}}
             onClick={e=>{if(suppressClick.current&&e.detail>0){suppressClick.current=false;return;}suppressClick.current=false;addClip(c.type)}}>
-            <IconPlus/> {c.label}
+            <c.icon/> {c.label}
           </button>
         ))}
 </div></details>

@@ -164,7 +164,7 @@ input[type='color'] { padding: 0; width: 44px; height: 24px; border: 1px solid v
   background: var(--ink-800); border-top: 1px solid var(--line);
   padding: 3px 10px; font-size: 11px; color: var(--text-mid);
 }
-.status-msg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status-msg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center; }
 
 /* Paint workspace */
 .paint-workspace, .uv-editor { flex: 1; display: flex; flex-direction: column; min-width: 0; }

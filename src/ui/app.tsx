@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three';
 import type { Project, Vec3 } from '../core/types';
 import { cloneMesh, deleteFace, deleteVertices, parseProject, serializeProject, uid } from '../core';
-import { StoreProvider, useStore, emptySelection, type Mode } from './store';
+import { StoreProvider, useStore, emptySelection, type Mode, type ModelTool, type PaintTool } from './store';
 import { ModelWorkspace, DEFAULT_RIG, type CameraRig, type SelectPayload, type DragPayload } from './modelWorkspace';
 import { PaintWorkspace } from './paintWorkspace';
 import { UVEditor, AnimateWorkspace } from './animateWorkspace';
@@ -378,8 +378,24 @@ function AppInner(): React.JSX.Element {
         }
         return;
       }
-      if(state.dialog||target?.closest('button,summary,[role=tab],[role=treeitem]'))return;
+      if(state.dialog)return;
       const k = e.key.toLowerCase();
+      const focusedControl = target?.closest('button,summary,[role=tab],[role=treeitem]');
+      const focusedToolRail = focusedControl?.closest('.suite-tool-rail[aria-label="Transform tools"],.suite-tool-rail[aria-label="Paint tools"]');
+      if (focusedControl && !focusedToolRail) return;
+      if (!e.altKey) {
+        const modelTools: Partial<Record<string, ModelTool>> = { v: 'select', t: 'move', r: 'rotate', s: 'scale' };
+        const paintTools: Partial<Record<string, PaintTool>> = {
+          i: 'picker', b: 'pen', e: 'eraser', f: 'fill', l: 'line', r: 'rect', c: 'ellipse', m: 'marquee',
+        };
+        const tool = state.mode === 'model' ? modelTools[k] : state.mode === 'paint' ? paintTools[k] : undefined;
+        if (tool) {
+          e.preventDefault();
+          dispatch({ t: 'setTool', tool });
+          return;
+        }
+      }
+      if (focusedControl) return;
       if (e.key === '1') dispatch({ t: 'setMode', mode: 'model' });
       if (e.key === '2') dispatch({ t: 'setMode', mode: 'paint' });
       if (e.key === '3') dispatch({ t: 'setMode', mode: 'animate' });
@@ -447,13 +463,6 @@ function AppInner(): React.JSX.Element {
           }
         }
       }
-      if (state.mode === 'paint') {
-        const map: Record<string, 'pen' | 'eraser' | 'fill' | 'line' | 'rect' | 'ellipse' | 'marquee' | 'picker'> = {
-          i:'picker', b: 'pen', e: 'eraser', f: 'fill', l: 'line', r: 'rect', c: 'ellipse', m: 'marquee',
-        };
-        const t = map[k];
-        if (t) dispatch({ t: 'setTool', tool: t });
-      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -486,10 +495,10 @@ function AppInner(): React.JSX.Element {
         {state.mode === 'model' && (
           <>
             <nav className="suite-tool-rail" aria-label="Transform tools">
-              <button aria-label="Select" title="Select" aria-pressed={state.modelTool==='select'} onClick={()=>dispatch({t:'setTool',tool:'select'})}><IconCursor/></button>
-              <button aria-label="Move" title="Move" aria-pressed={state.modelTool==='move'} onClick={()=>dispatch({t:'setTool',tool:'move'})}><IconMove/></button>
-              <button aria-label="Rotate" title="Rotate" aria-pressed={state.modelTool==='rotate'} onClick={()=>dispatch({t:'setTool',tool:'rotate'})}><IconRotate/></button>
-              <button aria-label="Scale" title="Scale" aria-pressed={state.modelTool==='scale'} onClick={()=>dispatch({t:'setTool',tool:'scale'})}><IconScale/></button>
+              <button aria-label="Select" title="Select (V)" aria-keyshortcuts="V" aria-pressed={state.modelTool==='select'} onClick={()=>dispatch({t:'setTool',tool:'select'})}><IconCursor/><kbd className="tool-shortcut" aria-hidden="true">V</kbd></button>
+              <button aria-label="Move" title="Move (T)" aria-keyshortcuts="T" aria-pressed={state.modelTool==='move'} onClick={()=>dispatch({t:'setTool',tool:'move'})}><IconMove/><kbd className="tool-shortcut" aria-hidden="true">T</kbd></button>
+              <button aria-label="Rotate" title="Rotate (R)" aria-keyshortcuts="R" aria-pressed={state.modelTool==='rotate'} onClick={()=>dispatch({t:'setTool',tool:'rotate'})}><IconRotate/><kbd className="tool-shortcut" aria-hidden="true">R</kbd></button>
+              <button aria-label="Scale" title="Scale (S)" aria-keyshortcuts="S" aria-pressed={state.modelTool==='scale'} onClick={()=>dispatch({t:'setTool',tool:'scale'})}><IconScale/><kbd className="tool-shortcut" aria-hidden="true">S</kbd></button>
               </nav><div className="model-center"><DockPortal target={toolbarTarget}><div className="model-toolbar suite-context-toolbar"><div className="control-cluster setting-cluster" role="group" aria-label="Transform settings">
               <label>Space <select aria-label="Gizmo space" disabled={state.modelTool==='scale'} title="Move and rotate use world/local axes; scaling uses local axes" value={state.modelTool==='scale'?'local':gizmoSpace} onChange={e=>setGizmoSpace(e.target.value as 'world'|'local')}><option value="world">World</option><option value="local">Local</option></select></label>
               <label>Rotation snap ° <input aria-label="Rotation snap degrees" type="number" min={0} max={180} value={rotationSnap} onChange={e=>setRotationSnap(Math.max(0,Number(e.target.value)))}/></label>

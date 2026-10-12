@@ -31,7 +31,7 @@ Actual verification for this release: 320 unit/integration tests and 96 Chromium
 4. Save: download an editable .pvo project. Open validates before replacing the document; invalid files are rejected without discarding current work. Undo/redo stores up to 60 snapshots. New/Open are undoable in this release (a deliberate browser safety adaptation).
 5. Export: OBJ/MTL/PNG or glTF/bin/PNG are ZIP bundles. Texture PNG, rendered PNG, animated GIF and sprite-sheet PNG are actual encoded downloads. GIF/sheets can use a camera turntable or the timeline. Animation GIF duration follows the timeline; turntable duration is frames/fps. Frame batches are bounded to 64 MiB, 120 frames and 512px frames; encoding runs on the main thread after rendering and cancellation is effective during frame capture.
 
-Navigation: right-drag pans; Alt/middle-drag orbits in perspective and pans in orthographic views; wheel zooms. Q/W/E select mesh/face/vertex. 1/2/3 switch modes. Ctrl/Cmd+Z/Y undo/redo and S/O save/open. Shortcuts are suppressed in text inputs. Use Help for limitations and shortcuts.
+Navigation: right-drag pans; Alt/middle-drag orbits in perspective and pans in orthographic views; wheel zooms. Q/W/E select mesh/face/vertex. V/T/R/S choose Select/Move/Rotate/Scale in Model mode. 1/2/3 switch modes. Ctrl/Cmd+Z/Y undo/redo and S/O save/open. Shortcuts are suppressed in text inputs. Use Help for limitations and shortcuts.
 
 ## Storage and safety
 

@@ -60,8 +60,10 @@ input:not([type=checkbox]):not([type=range]):not([type=color]),select {min-heigh
 .suite-context-toolbar label {display:flex;align-items:center;gap:6px;white-space:nowrap}
 .suite-context-toolbar input[type=number] {width:64px}
 .suite-tool-rail {display:flex;flex-direction:column;align-items:center;gap:7px;width:54px;flex:0 0 54px;padding:12px 7px;overflow-y:auto;background:var(--pivo-surface);border-right:1px solid var(--pivo-border)}
-.suite-tool-rail button {width:36px;height:36px;min-height:36px;padding:7px;justify-content:center;flex-shrink:0}
+.suite-tool-rail button {position:relative;width:36px;height:36px;min-height:36px;padding:7px;justify-content:center;flex-shrink:0}
 .suite-tool-rail button svg {width:20px;height:20px}
+.suite-tool-rail .tool-shortcut {position:absolute;right:3px;bottom:2px;font-family:inherit;font-size:9px;font-weight:600;line-height:1;color:var(--pivo-muted);pointer-events:none}
+.suite-tool-rail button[aria-pressed=true] .tool-shortcut {color:inherit}
 .suite-tool-rail button[aria-pressed=true] {background:color-mix(in srgb,var(--pivo-accent) 20%,var(--pivo-surface));color:var(--pivo-accent);border-color:var(--pivo-accent)}
 .suite-dialog-footer {display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--pivo-border);flex-shrink:0}
 .suite-dialog-title {font-size:18px;font-weight:650}

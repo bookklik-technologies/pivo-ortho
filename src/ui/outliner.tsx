@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import type { Mesh } from '../core/types';
 import { cloneMesh, mergeMeshes, uid } from '../core';
 import { useStore, clipboard, emptySelection } from './store';
-import { IconCopy, IconEye, IconEyeOff, IconFolder, IconLock, IconPlus, IconTrash, IconUnlock,IconMerge,IconCursor } from './icons';
+import { IconCopy, IconEye, IconEyeOff, IconFolder, IconLock, IconPlus, IconTrash, IconUnlock,IconMerge,IconPen,IconMore,IconCube } from './icons';
+import { SuiteMenu } from './suite-components';
 
 export function Outliner(): React.JSX.Element {
   const { state, dispatch, commit } = useStore();
@@ -228,21 +229,24 @@ export function Outliner(): React.JSX.Element {
                 tabIndex={0}
                 onDoubleClick={() => { setRenamingId(folder.id); setDraftName(folder.name); }}
               >
-                <IconFolder /> {folder.name}
+                <IconFolder /><span className="tree-label" title={folder.name}>{folder.name}</span>
               </span>
             )}
-            <span className="row-actions">
-              <button aria-label={`Rename folder ${folder.name}`} onClick={()=>{setRenamingId(folder.id);setDraftName(folder.name);}}><IconCursor/></button>
-              <button type="button" title={folder.visible ? 'Hide folder' : 'Show folder'} aria-label={`${folder.visible ? 'Hide' : 'Show'} folder ${folder.name}`} onClick={() => setFolderVisible(folder.id, !folder.visible)}>
+            <div className="row-actions">
+              <button type="button" className={`outliner-state ${!folder.visible ? 'is-hidden' : ''}`} title={folder.visible ? 'Hide folder' : 'Show folder'} aria-label={`${folder.visible ? 'Hide' : 'Show'} folder ${folder.name}`} aria-pressed={folder.visible} onClick={() => setFolderVisible(folder.id, !folder.visible)}>
                 {folder.visible ? <IconEye /> : <IconEyeOff />}
               </button>
-              <button type="button" title={folder.locked ? 'Unlock folder' : 'Lock folder'} aria-label={`${folder.locked ? 'Unlock' : 'Lock'} folder ${folder.name}`} onClick={() => setFolderLocked(folder.id, !folder.locked)}>
+              <button type="button" className={`outliner-state ${folder.locked ? 'is-locked' : ''}`} title={folder.locked ? 'Unlock folder' : 'Lock folder'} aria-label={`${folder.locked ? 'Unlock' : 'Lock'} folder ${folder.name}`} aria-pressed={folder.locked} onClick={() => setFolderLocked(folder.id, !folder.locked)}>
                 {folder.locked ? <IconLock /> : <IconUnlock />}
               </button>
-              <button aria-label={`Duplicate folder ${folder.name}`} title="Duplicate folder including clips" onClick={()=>duplicateFolder(folder.id)}><IconCopy/></button>
-              <button aria-label={`Merge folder ${folder.name}`} title="Merge folder; removes source clips (undoable)" onClick={()=>mergeFolder(folder.id)}><IconMerge/></button>
-              <button type="button" title="Delete folder (keeps meshes)" aria-label={`Delete folder ${folder.name}`} onClick={() => deleteFolder(folder.id)}><IconTrash /></button>
-            </span>
+              <SuiteMenu className="outliner-actions-menu" label={<IconMore/>} ariaLabel={`Actions for folder ${folder.name}`} title="Folder actions">
+                <button type="button" aria-label={`Rename folder ${folder.name}`} onClick={()=>{setRenamingId(folder.id);setDraftName(folder.name);}}><IconPen/>Rename</button>
+                <button type="button" disabled={folder.locked} aria-label={`Duplicate folder ${folder.name}`} title="Duplicate folder including clips" onClick={()=>duplicateFolder(folder.id)}><IconCopy/>Duplicate</button>
+                <button type="button" disabled={folder.locked} aria-label={`Merge folder ${folder.name}`} title="Merge folder; removes source clips (undoable)" onClick={()=>mergeFolder(folder.id)}><IconMerge/>Merge meshes</button>
+                <div className="outliner-menu-divider"/>
+                <button type="button" className="danger" title="Delete folder (keeps meshes)" aria-label={`Delete folder ${folder.name}`} onClick={() => deleteFolder(folder.id)}><IconTrash/>Delete folder</button>
+              </SuiteMenu>
+            </div>
           </div>
           {folderOf(folder.id).map((m) => <MeshRow key={m.id} mesh={m} withFolderSelect />)}
         </div>
@@ -257,10 +261,11 @@ export function Outliner(): React.JSX.Element {
 
   function MeshRow({ mesh, withFolderSelect }: { mesh: Mesh; withFolderSelect?: boolean }): React.JSX.Element {
     const locked = isMeshLocked(project, mesh.id);
+    const folderLocked = !!project.folders.find((f) => f.id === mesh.folderId)?.locked;
     const selected = sel.meshIds.includes(mesh.id);
     const active = sel.activeMeshId === mesh.id;
     return (
-      <div className={`row mesh-row ${selected ? 'selected' : ''} ${active ? 'active' : ''}`}>
+      <div className={`row mesh-row ${selected ? 'selected' : ''} ${active ? 'active' : ''} ${!mesh.visible ? 'is-hidden' : ''}`}>
         {renamingId === mesh.id ? (
           <input
             value={draftName}
@@ -281,33 +286,35 @@ export function Outliner(): React.JSX.Element {
             tabIndex={0}
             onClick={(e) => toggleSelect(mesh.id, e)}
             onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleSelect(mesh.id,e);}if(e.key==='F2'&&!locked){e.preventDefault();setRenamingId(mesh.id);setDraftName(mesh.name);}}}
-            onDoubleClick={() => { setRenamingId(mesh.id); setDraftName(mesh.name); }}
+            onDoubleClick={() => { if (!locked) { setRenamingId(mesh.id); setDraftName(mesh.name); } }}
           >
-            {mesh.name}{locked&&<IconLock/>}
+            <IconCube/><span className="tree-label" title={mesh.name}>{mesh.name}</span>
           </span>
         )}
-        <span className="row-actions">
-          <button disabled={locked} aria-label={`Rename ${mesh.name}`} title="Rename (F2)" onClick={()=>{setRenamingId(mesh.id);setDraftName(mesh.name);}}><IconCursor/></button>
-          <button type="button" title={mesh.visible ? 'Hide' : 'Show'} aria-label={`${mesh.visible ? 'Hide' : 'Show'} ${mesh.name}`} onClick={() => setMeshVisible(mesh, !mesh.visible)}>
+        <div className="row-actions">
+          <button type="button" className={`outliner-state ${!mesh.visible ? 'is-hidden' : ''}`} disabled={locked} title={mesh.visible ? 'Hide' : 'Show'} aria-label={`${mesh.visible ? 'Hide' : 'Show'} ${mesh.name}`} aria-pressed={mesh.visible} onClick={() => setMeshVisible(mesh, !mesh.visible)}>
             {mesh.visible ? <IconEye /> : <IconEyeOff />}
           </button>
-          <button type="button" title={mesh.locked ? 'Unlock' : 'Lock'} aria-label={`${mesh.locked ? 'Unlock' : 'Lock'} ${mesh.name}`} onClick={() => setMeshLocked(mesh, !mesh.locked)}>
-            {mesh.locked ? <IconLock /> : <IconUnlock />}
+          <button type="button" className={`outliner-state ${locked ? 'is-locked' : ''}`} disabled={folderLocked} title={folderLocked ? 'Locked by folder' : mesh.locked ? 'Unlock' : 'Lock'} aria-label={folderLocked ? `Locked by folder: ${mesh.name}` : `${mesh.locked ? 'Unlock' : 'Lock'} ${mesh.name}`} aria-pressed={locked} onClick={() => setMeshLocked(mesh, !mesh.locked)}>
+            {locked ? <IconLock /> : <IconUnlock />}
           </button>
-          <button type="button" title="Duplicate" aria-label={`Duplicate ${mesh.name}`} onClick={() => duplicate(mesh.id)}><IconCopy /></button>
-          <button type="button" title="Delete" aria-label={`Delete ${mesh.name}`} onClick={() => remove(mesh.id)}><IconTrash /></button>
-          {withFolderSelect && (
-            <select
+          <SuiteMenu className="outliner-actions-menu" label={<IconMore/>} ariaLabel={`Actions for ${mesh.name}`} title="Object actions">
+            <button type="button" disabled={locked} aria-label={`Rename ${mesh.name}`} title="Rename (F2)" onClick={()=>{setRenamingId(mesh.id);setDraftName(mesh.name);}}><IconPen/>Rename<span className="outliner-menu-key">F2</span></button>
+            <button type="button" disabled={locked} title="Duplicate" aria-label={`Duplicate ${mesh.name}`} onClick={() => duplicate(mesh.id)}><IconCopy/>Duplicate</button>
+            {withFolderSelect && <label className="outliner-folder-setting">Move to folder<select
               aria-label={`Folder for ${mesh.name}`}
+              disabled={locked}
               value={mesh.folderId ?? ''}
               onChange={(e) => assignFolder(mesh.id, e.target.value || null)}
               onClick={(e) => e.stopPropagation()}
             >
-              <option value="">—</option>
+              <option value="">No folder</option>
               {project.folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-            </select>
-          )}
-        </span>
+            </select></label>}
+            <div className="outliner-menu-divider"/>
+            <button type="button" className="danger" disabled={locked} title="Delete" aria-label={`Delete ${mesh.name}`} onClick={() => remove(mesh.id)}><IconTrash/>Delete</button>
+          </SuiteMenu>
+        </div>
       </div>
     );
   }

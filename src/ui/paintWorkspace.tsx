@@ -405,13 +405,15 @@ export function PaintWorkspace({previewProject,onPreview,dock,toolbar,active}:{p
             className={`tool-btn ${tool === t.id ? 'active' : ''}`}
             title={`${t.label} (${t.key})`}
             aria-label={t.label}
+            aria-keyshortcuts={t.key}
             aria-pressed={tool === t.id}
             onClick={() => dispatch({ t: 'setTool', tool: t.id })}
           >
             <t.icon />
+            <kbd className="tool-shortcut" aria-hidden="true">{t.key}</kbd>
           </button>
         ))}
-        <button title="Eyedropper (I)" aria-label="Eyedropper" aria-pressed={tool==='picker'} onClick={()=>dispatch({t:'setTool',tool:'picker'})}>Pick</button>
+        <button title="Eyedropper (I)" aria-label="Eyedropper" aria-keyshortcuts="I" aria-pressed={tool==='picker'} onClick={()=>dispatch({t:'setTool',tool:'picker'})}>Pick<kbd className="tool-shortcut" aria-hidden="true">I</kbd></button>
 </nav>
       <DockPortal target={toolbar} hidden={!active}><div className="paint-toolbar" role="toolbar" aria-label="Paint tools">
         <div className="vsep" />
