@@ -13,6 +13,23 @@ npm run dev
 
 Build: `npm run build`. Serve the resulting dist directory using any static HTTP server, or `npm run preview`. Open the URL printed by Vite. The self-contained pivo-ortho-browser.html is also included for a dependency-free runtime preview. WebGL2 and a desktop mouse/keyboard are required. Recommended window width: 1200px or more. This is not a touch-first editor.
 
+The hosted production build includes a manifest and automatically registered service worker that caches the app shell and bundled assets. Open it online over HTTPS or localhost and let caching finish before using it offline. Use the browser's install action where supported. This workflow applies to the production build, including `npm run preview`; the development server and separate `pivo-ortho-browser.html` preview do not use this offline shell. Keep downloaded `.pvo` backups: clearing site data removes local recovery and cached assets.
+
+## Documentation
+
+After `npm ci`, run these commands from the app's repository root:
+
+```sh
+npm run docs:dev      # start the VitePress documentation server
+npm run docs:build    # generate the static documentation site
+npm run docs:preview  # preview the built documentation site
+npm run docs:capture  # recreate tutorial screenshots and downloadable checkpoints
+```
+
+Open the local URL printed by VitePress. The documentation build is written to `docs/.vitepress/dist`; run `docs:build` before `docs:preview`. The application build remains in `dist/`.
+
+The [beginner tutorials](docs/tutorials/index.md) cover one project through three lessons, with real screenshots and editable native-project checkpoints. `docs:capture` starts a temporary local Vite server, uses a fresh Chromium session, writes assets to `docs/public/tutorials/`, and closes the browser/server afterward. It uses an installed Playwright Chromium browser (or installed Chrome); if neither is present, install Chromium with `npx playwright install chromium` first.
+
 ## Verify
 
 ```sh
@@ -21,7 +38,7 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-Actual verification for this release: 320 unit/integration tests and 96 Chromium browser tests passing, including an independent Three.js glTF importer and a 50-mesh/2,100-face fixture. Firefox, Safari/WebKit and real mobile devices are not yet certified. Production TypeScript/Vite build passes. See docs/TEST-REPORT.md for measured results and caveats.
+Historical verification from 10 October 2026 records 320 unit/integration tests and 96 Chromium browser tests passing, including an independent Three.js glTF importer and a 50-mesh/2,100-face fixture. Firefox, Safari/WebKit and real mobile devices are not yet certified. The production TypeScript/Vite build passed in that run. These results predate the PWA addition and do not certify its installation/offline behavior. See docs/TEST-REPORT.md for the recorded results and caveats.
 
 ## Make something
 
@@ -31,7 +48,7 @@ Actual verification for this release: 320 unit/integration tests and 96 Chromium
 4. Save: download an editable .pvo project. Open validates before replacing the document; invalid files are rejected without discarding current work. Undo/redo stores up to 60 snapshots. New/Open are undoable in this release (a deliberate browser safety adaptation).
 5. Export: OBJ/MTL/PNG or glTF/bin/PNG are ZIP bundles. Texture PNG, rendered PNG, animated GIF and sprite-sheet PNG are actual encoded downloads. GIF/sheets can use a camera turntable or the timeline. Animation GIF duration follows the timeline; turntable duration is frames/fps. Frame batches are bounded to 64 MiB, 120 frames and 512px frames; encoding runs on the main thread after rendering and cancellation is effective during frame capture.
 
-Navigation: right-drag pans; Alt/middle-drag orbits in perspective and pans in orthographic views; wheel zooms. Q/W/E select mesh/face/vertex. V/T/R/S choose Select/Move/Rotate/Scale in Model mode. 1/2/3 switch modes. Ctrl/Cmd+Z/Y undo/redo and S/O save/open. Shortcuts are suppressed in text inputs. Use Help for limitations and shortcuts.
+Navigation: right-drag pans; Alt/middle-drag orbits in perspective and pans in orthographic views; wheel zooms. Q/W/E select mesh/face/vertex. V/T/R/S choose Select/Move/Rotate/Scale in Model mode. 1/2/3 switch modes. Ctrl/Cmd+Z/Y undo/redo; Ctrl/Cmd+S saves and Ctrl/Cmd+O opens. Shortcuts are suppressed in text inputs. Use Help for limitations and shortcuts.
 
 ## Storage and safety
 
@@ -51,7 +68,7 @@ Mesh and folder locks block geometry, UV, transforms and associated clip edits. 
 - Desktop pointer drag/drop, cross-track movement and both resize handles are supported; mobile drag behavior is not supported. Existing overlapping clips are allowed. Use the Selected clip chooser to reach overlapped or off-range clips; imported clips beyond the timeline are retained rather than silently truncated.
 - Decorated GIF exports extend the global palette to preserve exact effect/background colors while retaining transparency (up to 256 colors). Overflow is explicitly warned and mapped to nearest colors. The core default indexed-palette path remains available.
 - glTF supports sampled transform animation with pivot-correct local nodes. Visibility clips, draw-behind, retro affine interpolation, shade ramps and retro post effects are not standard glTF semantics; warnings name these losses. OBJ is a static scene snapshot. Exported standard materials are not the editor's custom retro shader.
-- No offline service worker/installable PWA, collaboration, skeleton rigging, native-format interoperability, or deployment is included. The bundled HTML has no runtime network dependencies, but that is not a PWA caching guarantee.
+- Collaboration, skeleton rigging, native-format interoperability, and a remote deployment are not included. The hosted production build has a PWA offline shell; the separate bundled HTML preview has no runtime network dependencies but does not use that service-worker caching workflow.
 - WebGL canvas workflows are not fully screen-reader accessible. Panels/inputs are labeled, focus is visible, and dialogs contain focus and support Escape.
 
 ## Structure

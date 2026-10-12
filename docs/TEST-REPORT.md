@@ -2,6 +2,10 @@
 
 Executed 10 October 2026. These are actual runs, not a proposed test plan.
 
+::: info Historical verification record
+The results and limitations below describe the build tested on that date, before the PWA offline shell was added. They are retained as recorded evidence and do not certify the current installation/offline workflow. See [Installation & running](/getting-started#offline-shell-installation) for current behavior.
+:::
+
 ## Build and unit/integration suite
 
 - npm run build: TypeScript strict checking and Vite production bundle PASS.

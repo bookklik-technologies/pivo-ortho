@@ -1,0 +1,34 @@
+{
+  "browser": "156.0.8078.4",
+  "viewport": "1440x900",
+  "images": [
+    "model-01-new.png",
+    "model-02-cube.png",
+    "model-03-transform.png",
+    "model-04-finished.png",
+    "paint-01-face.png",
+    "paint-02-fill.png",
+    "paint-03-stripe.png",
+    "paint-04-uv.png",
+    "animate-01-workspace.png",
+    "animate-02-clip.png",
+    "animate-03-preview.png",
+    "animate-04-export.png"
+  ],
+  "downloads": [
+    "first-cube.pvo",
+    "painted-cube.pvo",
+    "rotating-cube.pvo",
+    "rotating-cube.gif"
+  ],
+  "errors": [],
+  "project": "Cube 1",
+  "meshes": 1,
+  "clipAxis": "y",
+  "durationSeconds": 2,
+  "checkpointsReopened": [
+    "first-cube.pvo",
+    "painted-cube.pvo",
+    "rotating-cube.pvo"
+  ]
+}

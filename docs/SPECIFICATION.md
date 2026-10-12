@@ -2,6 +2,8 @@
 
 Version 1.0 • 10 October 2026.
 
+This specification records the original baseline. The hosted production PWA offline shell was added afterward; current delivery status is tracked in [COVERAGE.md](/COVERAGE) and [Installation & running](/getting-started#offline-shell-installation). The dated [test report](/TEST-REPORT) does not certify that later installation/offline workflow.
+
 ## 1. Purpose
 
 Build a usable desktop-browser low-poly editor spanning modeling, indexed pixel-art textures, per-face UV editing, relative clip animation, and portable exports.

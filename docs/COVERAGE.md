@@ -1,6 +1,6 @@
 # Release 0.8.0 coverage
 
-This matrix distinguishes delivered behavior from the full roadmap.
+This matrix distinguishes delivered behavior from the full roadmap, including the subsequent PWA offline-shell addition. Test counts below are historical results from 10 October 2026; they do not certify PWA installation/offline behavior.
 
 | Area | Delivered | Remaining/different |
 |---|---|---|
@@ -11,7 +11,7 @@ This matrix distinguishes delivered behavior from the full roadmap.
 | UV | Active mesh face selection, corner and rectangle selection, selected-corner drag, numeric edits, nudge/rotate/flip/scale/copy/paste, live model preview during uncommitted corner dragging | Cross-mesh face editing and advanced UV workflows remain unclaimed |
 | Animation | Shared timeline, four tracks/mesh, all five clip types, deterministic relative-to-base evaluation, playback, lane scrubbing, library drops, cross-track moves, both-edge resize, single-gesture history/cancel, live prospective 3D pose, duplicate/clipboard, full numeric inspector, real scene preview | Multi-clip batch drags, snapping refinements and touch certification remain unclaimed |
 | Retro look | Nearest-neighbor indexed sampling, authored affine interpolation, editable discrete shade ramps, transparency, wireframe | Own palette/UI with locally bundled Lucide/Outfit |
-| Persistence | Atomic undo/redo, validated native .pvo save/open, debounced recovery, quota guards, clear-recovery control | Third-party native project formats, cloud sync/collaboration, PWA caching |
+| Persistence | Atomic undo/redo, validated native .pvo save/open, debounced recovery, quota guards, clear-recovery control, hosted production PWA with a cached offline shell | Third-party native project formats, cloud sync/collaboration; installation/offline verification is not included in the historical test report |
 | Outputs | Actual configurable-camera PNG, GIF and sprite sheets with shared effects plus sheet camera/effect metadata; OBJ/MTL/PNG ZIP; glTF/bin/PNG ZIP with sampled pivot-correct TRS | Perspective/orthographic and current-view cameras are supported; Outline/scanline/pixel tag decorations and exact-frame live previews are delivered; standard formats cannot preserve custom shader/visibility/draw-behind |
 | Tests | 320 unit/integration, 96 Chromium browser checks, production build, independent glTF import | Firefox/WebKit/mobile certification, broad accessibility audit, release-scale load testing |
 
