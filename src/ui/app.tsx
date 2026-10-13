@@ -481,7 +481,8 @@ function AppInner(): React.JSX.Element {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [state.dialog,state.exporting]);
-  if (noWebGL) return <div className="app"><Header paintTab={paintTab} onPaintTab={setPaintTab} onResetViews={()=>{}}/><WebGLFallback/>{state.dialog==='recovery'&&<RecoveryDialog/>}{state.dialog==='about'&&<AboutDialog onClose={()=>dispatch({t:'setDialog',dialog:null})}/>}{state.dialog==='shortcuts'&&<ShortcutsDialog onClose={()=>dispatch({t:'setDialog',dialog:null})}/>}{state.dialog==='help'&&<HelpDialog onClose={()=>dispatch({t:'setDialog',dialog:null})}/>}</div>;
+  const exportsDialog=state.dialog==='exports'&&<React.Suspense fallback={<div role="status">Loading export tools…</div>}><ExportsDialog cameraRig={rig} currentView={activeView} onClose={()=>dispatch({t:'setDialog',dialog:null})}/></React.Suspense>;
+  if (noWebGL) return <div className="app"><Header paintTab={paintTab} onPaintTab={setPaintTab} onResetViews={()=>{}}/><WebGLFallback/>{state.dialog==='recovery'&&<RecoveryDialog/>}{state.dialog==='about'&&<AboutDialog onClose={()=>dispatch({t:'setDialog',dialog:null})}/>}{state.dialog==='shortcuts'&&<ShortcutsDialog onClose={()=>dispatch({t:'setDialog',dialog:null})}/>}{state.dialog==='help'&&<HelpDialog onClose={()=>dispatch({t:'setDialog',dialog:null})}/>}{exportsDialog}</div>;
   return (
     <div className="app">
       <Header paintTab={paintTab} onPaintTab={tab=>{window.dispatchEvent(new CustomEvent('pivo-ortho:cancel-gesture'));setPaintPreview(null);setPaintTab(tab);}} onResetViews={()=>{setRig({...DEFAULT_RIG});dispatch({t:'setLayout',layout:'quad'});}}/>
@@ -548,7 +549,7 @@ function AppInner(): React.JSX.Element {
       {state.dialog==='recovery'&&<RecoveryDialog/>}
       {state.dialog === 'shortcuts' && <ShortcutsDialog onClose={() => dispatch({ t: 'setDialog', dialog: null })} />}
       {state.dialog === 'help' && <HelpDialog onClose={() => dispatch({ t: 'setDialog', dialog: null })} />}{state.dialog === 'about' && <AboutDialog onClose={() => dispatch({ t: 'setDialog', dialog: null })} />}
-      {state.dialog === 'exports' && <React.Suspense fallback={<div role="status">Loading export tools…</div>}><ExportsDialog cameraRig={rig} currentView={activeView} onClose={() => dispatch({ t: 'setDialog', dialog: null })} /></React.Suspense>}
+      {exportsDialog}
     </div>
   );
 }
