@@ -5,3 +5,7 @@ test-results/
 *.log
 *-screen.png
 tools/generate-examples.cjs
+
+dist-standalone/
+playwright-report/
+test-results/

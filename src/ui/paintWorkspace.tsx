@@ -1,3 +1,4 @@
+import { validatePngBytes, PNG_LIMITS } from '../io/png-validation';
 import {DockPortal} from './suite-components';
 import {checkerColor} from './theme';
 import {drawAtlas} from './atlasDraw';
@@ -358,7 +359,11 @@ export function PaintWorkspace({previewProject,onPreview,dock,toolbar,active}:{p
 
   const importPNG = useCallback(async (file: File) => {
     try {
-      const bitmap = await createImageBitmap(file);
+      if(file.size>PNG_LIMITS.maxBytes)throw new Error('PNG exceeds the 32 MiB input limit');
+      const bytes=new Uint8Array(await file.arrayBuffer());
+      const info=validatePngBytes(bytes);
+      const bitmap = await createImageBitmap(new Blob([bytes]));
+      if(bitmap.width!==info.width||bitmap.height!==info.height){bitmap.close();throw new Error('Decoded PNG dimensions differ from validated metadata');}
       const cv = document.createElement('canvas');
       cv.width = TEX; cv.height = TEX;
       const ctx = cv.getContext('2d')!;
@@ -389,7 +394,7 @@ export function PaintWorkspace({previewProject,onPreview,dock,toolbar,active}:{p
       a.href = URL.createObjectURL(blob);
       a.download = `${project.name || 'texture'}-texture.png`;
       a.click();
-      URL.revokeObjectURL(a.href);
+      setTimeout(()=>URL.revokeObjectURL(a.href),10000);
       dispatch({ t: 'setStatus', status: 'Texture PNG downloaded.' });
     }, 'image/png');
   }, [tex, project.name, dispatch]);

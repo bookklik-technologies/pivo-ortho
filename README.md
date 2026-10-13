@@ -31,3 +31,7 @@ See the [tutorials](https://bookklik-technologies.github.io/pivo-ortho/docs/tuto
 ## License
 
 Released under the [MIT License](LICENSE). Dependency licenses remain applicable.
+
+## Production readiness
+
+See [readiness findings and release procedure](docs/production-readiness.md). Unit tests are manual; pull-request checks cover builds, dependency exceptions and browser workflows.

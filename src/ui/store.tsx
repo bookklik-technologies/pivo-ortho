@@ -5,6 +5,9 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import { History, createProject, createPrimitive, uid } from '../core';
 import { validateProject } from '../core/validate';
+import { serializeProject, parseProject } from '../core/serialize';
+import { recovery, inspectRecovery, resolveRecovery } from './recovery';
+import type { RecoveryEntry } from './suite-recovery';
 import type { Clip, Project } from '../core/types';
 
 export type Mode = 'model' | 'paint' | 'animate';
@@ -33,6 +36,7 @@ export interface UiState {
   recoverySnapshot:string|null;
   recoveryState:'pending'|'stored'|'unavailable'|'cleared';
   recoverySuspended:boolean;
+  recoveryCopies:RecoveryEntry[];
   mode: Mode;
   selection: Selection;
   modelTool: ModelTool;
@@ -57,6 +61,7 @@ type Action =
   | {t:'markSaved';snapshot:string;source?:'opened'|'downloaded'}
   | {t:'setRecovery';snapshot:string|null;status:UiState['recoveryState']}
   | {t:'clearRecovery'}
+  | {t:'setRecoveryCopies';copies:RecoveryEntry[]}
   | { t: 'setMode'; mode: Mode }
   | { t: 'setSelection'; selection: Selection }
   | { t: 'setTool'; tool: ModelTool | PaintTool }
@@ -72,10 +77,11 @@ type Action =
 
 function reduce(state: UiState, a: Action): UiState {
   switch (a.t) {
+    case 'setRecoveryCopies':return {...state,recoveryCopies:a.copies};
     case 'markSaved':return {...state,savedSnapshot:a.snapshot,savedSource:a.source??'downloaded'};
     case 'setRecovery':return {...state,recoverySnapshot:a.snapshot,recoveryState:a.status};
     case 'clearRecovery':return {...state,recoverySnapshot:null,recoveryState:'cleared',recoverySuspended:true};
-    case 'setProject': return { ...state, project: a.project,recoverySuspended:false,recoveryState:'pending', status: a.label ?? state.status };
+    case 'setProject': return { ...state, project: a.project,wireframe:a.project.render.wireframe,recoverySuspended:false,recoveryState:'pending', status: a.label ?? state.status };
     case 'setMode':
       // Switching mode keeps the mesh context (active mesh + multi-select) and
       // face picks (Paint's UV editor edits the faces picked in Model mode);
@@ -100,11 +106,11 @@ function reduce(state: UiState, a: Action): UiState {
     case 'setSnap': return { ...state, snap: a.snap };
     case 'setUvSnap': return { ...state, uvSnap: a.snap };
     case 'setLayout': return { ...state, viewLayout: a.layout };
-    case 'setWireframe': return { ...state, wireframe: a.wireframe, project: { ...state.project, render: { ...state.project.render, wireframe: a.wireframe } } };
+    case 'setWireframe': return state;
     case 'setStatus': return { ...state, status: a.status };
     case 'setDialog': return { ...state, dialog: a.dialog };
     case 'setExporting': return { ...state, exporting: a.exporting };
-    case 'commit': return { ...state, project: a.project,recoverySuspended:false,recoveryState:'pending', status: a.label };
+    case 'commit': return { ...state, project: a.project,wireframe:a.project.render.wireframe,recoverySuspended:false,recoveryState:'pending', status: a.label };
     default: return state;
   }
 }
@@ -116,6 +122,10 @@ interface Store {
   /** commit a durable change; returns committed project or null on failure */
   commit: (label: string, mutate: (draft: Project) => void) => Project | null;
   cancelDrag: () => void;
+  flushRecovery: () => Promise<void>;
+  refreshRecovery: () => Promise<void>;
+  restoreRecovery: (entry:RecoveryEntry) => Promise<void>;
+  discardRecovery: (entry:RecoveryEntry) => Promise<void>;
 }
 
 const StoreCtx = createContext<Store | null>(null);
@@ -192,35 +202,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   let histRef: History | null = null;
 
   const init = useMemo(() => {
-    let recovered: Project | null = null;
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        let parsed: Project;
-        // Strict parse via core: schema checks, limits, pollution guards.
-        // Any failure falls back to the demo scene (never a raw cast).
-        try {
-          parsed = JSON.parse(raw) as Project;
-          validateProject(parsed);
-        } catch {
-          parsed = null as unknown as Project;
-        }
-        if (
-          parsed && typeof parsed === 'object' &&
-          parsed.format === 'pivo-ortho' && parsed.version === 1 &&
-          Array.isArray(parsed.meshes) &&
-          parsed.texture &&
-          typeof parsed.texture.pixels === 'object' &&
-          parsed.texture.pixels.length === 16384
-        ) {
-          recovered = parsed;
-        }
-      }
-    } catch {
-      recovered = null;
-    }
-    if(recovered)startupStatus.current='Browser recovery restored. Download a project to keep an editable backup.';
-    const project = recovered ?? makeDefaultProject();
+    const project = makeDefaultProject();
     const hist = new History(project, 60);
     historyRef.current = hist;
     histRef = hist;
@@ -229,7 +211,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const [state, dispatch] = useReducer(reduce, undefined, () => ({
     project: init.current,
-    savedSnapshot:null,savedSource:null,recoverySnapshot:null,recoveryState:'pending' as const,recoverySuspended:false,
+    savedSnapshot:JSON.stringify(init.current),savedSource:null,recoverySnapshot:null,recoveryState:'pending' as const,recoverySuspended:false,recoveryCopies:[],
     mode: 'model' as Mode,
     selection: emptySelection(),
     modelTool: 'select' as ModelTool,
@@ -280,31 +262,75 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     dispatch({ t: 'setStatus', status: 'Drag cancelled.' });
   }, []);
 
-  // Debounced autosave with quota + security error reporting.
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const recoveryReady = useRef(false);
+  const timer = useRef<number | null>(null);
+  const initialization = useRef<Promise<void> | null>(null);
+  const flushRecovery = useCallback(async () => {
+    if (timer.current !== null) { clearTimeout(timer.current); timer.current = null; }
+    await initialization.current;
+    if (!recoveryReady.current) throw new Error('Recovery storage is unavailable');
+    const current = stateRef.current;
+    if (current.recoverySuspended) throw new Error('Recovery was discarded; download your current project before updating');
+    const snapshot = serializeProject(current.project);
+    try {
+      await recovery.save('document', current.project.name, snapshot);
+      dispatch({t:'setRecovery',snapshot,status:'stored'});
+    } catch (error) {
+      dispatch({t:'setRecovery',snapshot:null,status:'unavailable'});
+      dispatch({t:'setStatus',status:`Recovery save failed: ${String(error)}. Download a .pvo backup.`});
+      throw error;
+    }
+  }, []);
+  const refreshRecovery = useCallback(async () => {
+    const copies=await inspectRecovery();recoveryReady.current=true;dispatch({t:'setRecoveryCopies',copies});
+  }, []);
   useEffect(() => {
-    if(state.recoverySuspended)return;
-    const snapshot=JSON.stringify(state.project);
-    const id = window.setTimeout(() => {
-      try {
-        localStorage.setItem(STORAGE_KEY,snapshot);
-        dispatch({t:'setRecovery',snapshot,status:'stored'});
-      } catch (err) {
-        dispatch({t:'setRecovery',snapshot:null,status:'unavailable'});
-        const e = err as DOMException;
-        if (e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
-          dispatch({ t: 'setStatus', status: 'Recovery save failed: localStorage quota exceeded. Use Save to keep a .pvo copy.' });
-        } else {
-          dispatch({ t: 'setStatus', status: 'Recovery save failed: storage unavailable.' });
-        }
-      }
-    }, SAVE_DEBOUNCE);
-    return () => window.clearTimeout(id);
-  }, [state.project,state.recoverySuspended]);
-
-  const store: Store = {
-    state, dispatch, history: histRef ?? historyRef.current,
-    commit, cancelDrag,
+    initialization.current = inspectRecovery().then(copies => {
+      recoveryReady.current = true;
+      dispatch({t:'setRecoveryCopies',copies});
+      if (copies.length) dispatch({t:'setDialog',dialog:'recovery'});
+    }).catch(error => {
+      dispatch({t:'setRecovery',snapshot:null,status:'unavailable'});
+      dispatch({t:'setStatus',status:`Recovery unavailable: ${String(error)}. Download project backups.`});
+    });
+  }, []);
+  useEffect(() => {
+    if (state.recoverySuspended || JSON.stringify(state.project) === state.savedSnapshot) return;
+    timer.current = window.setTimeout(() => { void flushRecovery().catch(() => {}); }, SAVE_DEBOUNCE);
+    return () => { if(timer.current !== null)clearTimeout(timer.current); };
+  }, [state.project,state.recoverySuspended,flushRecovery]);
+  useEffect(() => {
+    const hidden = () => { if(document.visibilityState === 'hidden' && JSON.stringify(stateRef.current.project) !== stateRef.current.savedSnapshot) void flushRecovery().catch(() => {}); };
+    const unload = (event:BeforeUnloadEvent) => {
+      if(JSON.stringify(stateRef.current.project) !== stateRef.current.savedSnapshot) { event.preventDefault();event.returnValue=''; }
+    };
+    document.addEventListener('visibilitychange',hidden);window.addEventListener('pagehide',hidden);window.addEventListener('beforeunload',unload);
+    return () => { document.removeEventListener('visibilitychange',hidden);window.removeEventListener('pagehide',hidden);window.removeEventListener('beforeunload',unload); };
+  }, [flushRecovery]);
+  const restoreRecovery = async (entry:RecoveryEntry) => {
+    if(typeof entry.data !== 'string')throw new Error('Recovery is not an Ortho project. Download its raw backup.');
+    const restored = parseProject(entry.data);
+    if(JSON.stringify(stateRef.current.project) !== stateRef.current.savedSnapshot && !confirm('Replace unsaved edits with this recovery copy? Download your current project first.'))return;
+    const opened=commit('Open project',draft=>Object.assign(draft,restored));
+    if(!opened)throw new Error('Recovery could not be restored');
+    await recovery.save('document',opened.name,serializeProject(opened));
+    await resolveRecovery(entry);
+    await refreshRecovery();
+    dispatch({t:'setSelection',selection:emptySelection()});dispatch({t:'setDialog',dialog:null});
+    dispatch({t:'setStatus',status:'Browser recovery restored. Download a .pvo backup.'});
   };
+  const discardRecovery = async (entry:RecoveryEntry) => {
+    await resolveRecovery(entry);await refreshRecovery();
+    if(entry.id === `${recovery.session}:document`)dispatch({t:'clearRecovery'});
+    dispatch({t:'setStatus',status:'Recovery copy discarded; current editing work is kept.'});
+  };
+  const safeDispatch=useCallback<React.Dispatch<Action>>(action => {
+    if(action.t==='setWireframe') {commit('Toggle wireframe',draft=>{draft.render.wireframe=action.wireframe;});return;}
+    dispatch(action);
+  },[commit]);
+  const store: Store = {state,dispatch:safeDispatch,history:histRef ?? historyRef.current,commit,cancelDrag,flushRecovery,refreshRecovery,restoreRecovery,discardRecovery};
 
   return <StoreCtx.Provider value={store}>{children}</StoreCtx.Provider>;
 }

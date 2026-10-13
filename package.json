@@ -1,7 +1,7 @@
 {
   "name": "pivo-ortho",
   "description": "A local-first browser low-poly modeling, texturing and animation editor.",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "license": "MIT",
   "author": "a-hakim",
   "private": true,
@@ -10,35 +10,51 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
-    "test:browser": "playwright test",
+    "test:browser": "node scripts/browser-readiness.mjs",
     "preview": "vite preview --host 0.0.0.0",
-    "docs:dev": "vitepress dev docs",
+    "docs:dev": "npm run docs:build && node scripts/preview-docs.mjs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "examples": "esbuild tools/generate-examples.ts --bundle --platform=node --format=cjs --outfile=tools/generate-examples.cjs && node tools/generate-examples.cjs",
-    "docs:capture": "node scripts/capture-tutorials.mjs"
+    "docs:capture": "node scripts/capture-tutorials.mjs",
+    "check:suite": "node scripts/check-suite.mjs",
+    "build:standalone": "node scripts/build-standalone.mjs",
+    "check:dependencies": "node scripts/audit-dependencies.mjs",
+    "test:release": "node scripts/browser-readiness.mjs",
+    "test:browser:legacy": "playwright test",
+    "capture:predecessor": "node scripts/capture-predecessor.mjs",
+    "test:upgrade": "node scripts/browser-upgrade.mjs",
+    "test:standalone": "node scripts/browser-standalone.mjs",
+    "test:menus": "node scripts/browser-menus.mjs"
   },
   "dependencies": {
     "@fontsource-variable/outfit": "^5.3.0",
-    "fflate": "^0.8.2",
+    "fflate": "0.8.3",
     "gifenc": "^1.0.3",
     "lucide-react": "^1.55.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "three": "^0.180.0"
+    "three": "^0.180.0",
+    "pako": "2.2.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.56.0",
-    "@types/node": "^26.6.4",
+    "@playwright/test": "1.64.0",
+    "@types/node": "^24.19.1",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@types/three": "^0.180.0",
     "esbuild": "^0.28.2",
     "gifuct-js": "^2.1.2",
     "typescript": "^5.9.3",
-    "vite": "^7.1.9",
+    "vite": "7.3.7",
     "vite-plugin-pwa": "^2.0.0",
     "vitepress": "^1.6.4",
-    "vitest": "^3.2.4"
-  }
+    "vitest": "5.0.4",
+    "@types/pako": "2.0.4"
+  },
+  "engines": {
+    "node": "24.x",
+    "npm": "11.x"
+  },
+  "packageManager": "npm@11.19.0"
 }

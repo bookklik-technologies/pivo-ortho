@@ -1,4 +1,5 @@
-import {installDisclosureMenus,installDockToggle} from './suite';
+import { MAX_PROJECT_BYTES } from '../core/validate';
+import {installDisclosureMenus,installDockToggle,installAppMenuNavigation} from './suite';
 import logo from '../../logo.svg?url';
 import {SuiteMenu,SuiteTabs,SuiteResize,DockPortal} from './suite-components';
 import {initializeTheme,applyTheme,saveTheme,type UITheme} from './theme';
@@ -15,21 +16,22 @@ import { PaintWorkspace } from './paintWorkspace';
 import { UVEditor, AnimateWorkspace } from './animateWorkspace';
 import { Outliner } from './outliner';
 import { Inspector } from './inspector';
-import { ExportsDialog } from './exportsDialog';
+const ExportsDialog = React.lazy(() => import('./exportsDialog').then(module => ({ default: module.ExportsDialog })));
+import { installUpdatePrompt } from './suite-pwa';
+declare const __STANDALONE__: boolean;
 import { ShortcutsDialog, HelpDialog, ErrorBoundary, WebGLFallback } from './dialogs';import { AboutDialog } from './aboutDialog';
 import { collectFaces, projectToNdc } from './render';
 import { IconCube, IconExport, IconHelp, IconOpen, IconPaint, IconPlay, IconRedo, IconSave, IconUndo,IconKeyboard,IconCursor,IconMove,IconRotate,IconScale,IconSun,IconMoon } from './icons';
-
 function Header({paintTab,onPaintTab,onResetViews}:{paintTab:string;onPaintTab:(tab:string)=>void;onResetViews:()=>void}):React.JSX.Element {
-  const { state, dispatch, history, commit } = useStore();
+  const { state, dispatch, history, commit, refreshRecovery } = useStore();
   const project = state.project;
+  const menusRef=useRef<HTMLElement>(null);useEffect(()=>installAppMenuNavigation(menusRef.current!),[]);
   const [theme,setTheme]=useState<UITheme>(initializeTheme);
   const toggleTheme=()=>{const next:UITheme=theme==='light'?'dark':'light';setTheme(next);applyTheme(next);const saved=saveTheme(next);dispatch({t:'setStatus',status:`${next==='light'?'Light':'Dark'} theme enabled${saved?'.':' for this session; browser storage unavailable.'}`})};
   const useSystem=()=>{try{localStorage.removeItem('pivo-ortho:theme:v1');}catch{}const next:UITheme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';setTheme(next);applyTheme(next);};
   useEffect(()=>{const media=matchMedia('(prefers-color-scheme: dark)');const change=()=>{try{if(!localStorage.getItem('pivo-ortho:theme:v1')){const next:UITheme=media.matches?'dark':'light';setTheme(next);applyTheme(next);}}catch{}};media.addEventListener('change',change);return()=>media.removeEventListener('change',change);},[]);
   const dockToggleRef=useRef<HTMLButtonElement>(null);useEffect(()=>{const dock=document.getElementById('ortho-dock');if(dock&&dockToggleRef.current)return installDockToggle(dockToggleRef.current,dock);},[]);
   const fileRef = useRef<HTMLInputElement | null>(null);
-
   const save = useCallback(() => {
     try {
       const text = serializeProject(project);
@@ -39,16 +41,16 @@ function Header({paintTab,onPaintTab,onResetViews}:{paintTab:string;onPaintTab:(
       const safe = (project.name || 'project').replace(/[^a-z0-9_-]+/gi, '-').toLowerCase();
       a.download = `${safe}.pvo`;
       a.click();
-      URL.revokeObjectURL(a.href);
+      setTimeout(()=>URL.revokeObjectURL(a.href),10000);
       dispatch({t:'markSaved',snapshot:JSON.stringify(project)});
       dispatch({ t: 'setStatus', status: `Project downloaded: ${safe}.pvo` });
     } catch (err) {
       dispatch({ t: 'setStatus', status: `Save failed: ${(err as Error).message}` });
     }
   }, [project, dispatch]);
-
   const open = useCallback(async (file: File) => {
     try {
+      if(file.size > MAX_PROJECT_BYTES)throw new Error('Project exceeds the 8 MiB input limit');
       const text = await file.text();
       const parsed = parseProject(text); // strict validation before replacing
       const opened=commit('Open project', (draft) => {
@@ -68,7 +70,6 @@ function Header({paintTab,onPaintTab,onResetViews}:{paintTab:string;onPaintTab:(
       dispatch({ t: 'setStatus', status: `Open rejected: ${(err as Error).message}` });
     }
   }, [commit, dispatch]);
-
   const newProject = useCallback(() => {
     commit('New project', (draft) => {
       draft.name = 'Untitled';
@@ -80,7 +81,6 @@ function Header({paintTab,onPaintTab,onResetViews}:{paintTab:string;onPaintTab:(
     dispatch({ t: 'setSelection', selection: emptySelection() });
     dispatch({ t: 'setStatus', status: 'New empty project. Undo returns the previous scene.' });
   }, [commit, dispatch]);
-
   const doUndo = () => {
     if (!history || !history.canUndo) return;
     const label = history.undoLabel;
@@ -94,18 +94,17 @@ function Header({paintTab,onPaintTab,onResetViews}:{paintTab:string;onPaintTab:(
     const next = history.redo();
     dispatch({ t: 'setProject', project: next, label: `Redo: ${label}` });
   };
-
   const dirty=JSON.stringify(project)!==state.savedSnapshot;
   const recovery=state.recoveryState==='stored'&&state.recoverySnapshot!==JSON.stringify(project)?'pending':state.recoveryState;
   return <>
     <header className="app-header suite-header">
       <h1 className="suite-brand"><img src={logo} alt=""/>PiVo Ortho</h1>
-      <nav className="suite-menus" aria-label="Application menus">
-        <SuiteMenu label="File"><button onClick={newProject}>New project</button><button aria-label="Open project" onClick={()=>fileRef.current?.click()}>Open project…</button><button onClick={save}>Save project</button><button onClick={()=>dispatch({t:'setDialog',dialog:'exports'})}>Export…</button><button onClick={()=>dispatch({t:'setDialog',dialog:'recovery'})}>Recovery…</button></SuiteMenu>
+      <nav ref={menusRef} className="suite-menus" aria-label="Application menus">
+        <SuiteMenu label="File"><button onClick={newProject}>New project…</button><button aria-label="Open project" onClick={()=>fileRef.current?.click()}>Open project…</button><button onClick={save}>Save project</button><button onClick={()=>dispatch({t:'setDialog',dialog:'exports'})}>Export…</button><button onClick={()=>{void refreshRecovery().catch(error=>dispatch({t:'setStatus',status:String(error)}));dispatch({t:'setDialog',dialog:'recovery'});}}>Recovery…</button></SuiteMenu>
         <SuiteMenu label="Edit"><button disabled={!history?.canUndo} onClick={doUndo}>Undo</button><button disabled={!history?.canRedo} onClick={doRedo}>Redo</button></SuiteMenu>
-        <SuiteMenu label="View"><button onClick={onResetViews}>Reset workspace views</button><button onClick={()=>dispatch({t:'setLayout',layout:state.viewLayout==='quad'?'persp':'quad'})}>Four views / maximize 3D</button><button onClick={()=>document.querySelector<HTMLButtonElement>('.suite-dock-toggle')?.click()}>Toggle panels</button><button onClick={useSystem}>System appearance</button><button onClick={()=>{setTheme('light');applyTheme('light');saveTheme('light');}}>Light appearance</button><button onClick={()=>{setTheme('dark');applyTheme('dark');saveTheme('dark');}}>Dark appearance</button><button onClick={()=>document.querySelector('.app')?.classList.toggle('suite-diagnostics')}>Technical diagnostics</button></SuiteMenu>
-        <SuiteMenu label="Help"><button onClick={()=>dispatch({t:'setDialog',dialog:'shortcuts'})}>Keyboard shortcuts…</button><button onClick={()=>dispatch({t:'setDialog',dialog:'help'})}>Usage help…</button><button onClick={()=>dispatch({t:'setDialog',dialog:'about'})}>About PiVo Ortho</button></SuiteMenu>
-        <a href="./docs/" target="_blank" rel="noopener">Docs</a>
+        <SuiteMenu label="View"><button onClick={()=>document.querySelector<HTMLButtonElement>('.suite-dock-toggle')?.click()}>Toggle panels</button><button onClick={useSystem}>System appearance</button><button disabled={theme==='light'} onClick={()=>{setTheme('light');applyTheme('light');saveTheme('light');}}>Light appearance</button><button disabled={theme==='dark'} onClick={()=>{setTheme('dark');applyTheme('dark');saveTheme('dark');}}>Dark appearance</button><hr className="suite-menu-separator"/><button onClick={onResetViews}>Reset workspace views</button><button onClick={()=>dispatch({t:'setLayout',layout:state.viewLayout==='quad'?'persp':'quad'})}>Four views / maximize 3D</button><button onClick={()=>document.querySelector('.app')?.classList.toggle('suite-diagnostics')}>Technical diagnostics</button></SuiteMenu>
+        <SuiteMenu label="Help"><button onClick={()=>dispatch({t:'setDialog',dialog:'shortcuts'})}>Keyboard shortcuts…</button><button onClick={()=>dispatch({t:'setDialog',dialog:'about'})}>About PiVo Ortho</button><hr className="suite-menu-separator"/><button onClick={()=>dispatch({t:'setDialog',dialog:'help'})}>Usage help…</button></SuiteMenu>
+
       </nav>
       <div className="suite-header-actions">
         <button onClick={doUndo} disabled={!history?.canUndo} aria-label="Undo" title="Undo (Ctrl/Cmd+Z)"><IconUndo/></button>
@@ -120,17 +119,27 @@ function Header({paintTab,onPaintTab,onResetViews}:{paintTab:string;onPaintTab:(
       <div className="ortho-mode-tabs"><SuiteTabs label="Work mode" values={[{id:'model',label:'Model',icon:<IconCube/>},{id:'paint',label:'Paint',icon:<IconPaint/>},{id:'animate',label:'Animate',icon:<IconPlay/>}]} active={state.mode} onChange={mode=>dispatch({t:'setMode',mode:mode as Mode})}/></div><select className="ortho-mode-select" aria-label="Work mode (compact)" value={state.mode} onChange={e=>dispatch({t:'setMode',mode:e.target.value as Mode})}>{(['model','paint','animate'] as Mode[]).map(mode=><option key={mode} value={mode}>{mode[0].toUpperCase()+mode.slice(1)}</option>)}</select>
       {state.mode==='paint'&&<SuiteTabs label="Paint workspace" values={[{id:'texture',label:'Texture'},{id:'uv',label:'UV'}]} active={paintTab} onChange={onPaintTab}/>}
       <div className="suite-document-meta"><span className="suite-document-name" title={project.name}>{project.name}</span>
-      <span className="suite-save-state" role="status">{dirty?'Unsaved edits':state.savedSource==='opened'?'Project opened':'Project downloaded'} · {recovery==='stored'?'Browser recovery stored':recovery==='unavailable'?'Recovery unavailable':recovery==='cleared'?'Recovery cleared':'Recovery pending'}</span></div>
+      <span className="suite-save-state" role="status">{dirty?'Unsaved edits':state.savedSource==='opened'?'Project opened':state.savedSource==='downloaded'?'Project downloaded':'Sample document'} · {recovery==='stored'?'Browser recovery stored':recovery==='unavailable'?'Recovery unavailable':recovery==='cleared'?'Recovery cleared':'Recovery pending'}</span></div>
       <button className="suite-dock-toggle" aria-controls="ortho-dock" aria-expanded="false" ref={dockToggleRef}>Panels</button>
     </div>
   </>;
 }
-
 function RecoveryDialog(){
- const {state,dispatch}=useStore();const [confirm,setConfirm]=useState(false);
- return <div className="dialog-backdrop"><div className="dialog" role="dialog" aria-modal="true" aria-labelledby="recovery-title"><header><h2 id="recovery-title">Browser recovery</h2></header><div className="dialog-body"><p>Browser recovery is separate from downloaded .pvo projects. The last valid recovery copy is restored when this editor starts.</p><p>{state.recoveryState==='stored'?'A recovery copy is stored in this browser.':state.recoveryState==='unavailable'?'Browser storage is unavailable. Download a project to keep your work.':state.recoveryState==='cleared'?'The recovery copy has been cleared. Further edits resume browser recovery.':'Recovery is pending.'}</p>{confirm&&<p role="alert">Discard permanently removes the browser recovery copy. Your current document and downloaded projects are kept. Further edits resume recovery.</p>}</div><footer className="suite-dialog-footer"><button onClick={()=>dispatch({t:'setDialog',dialog:null})}>Cancel</button><button className="danger" disabled={state.recoveryState==='unavailable'||state.recoveryState==='cleared'} onClick={()=>{if(!confirm){setConfirm(true);return;}try{localStorage.removeItem('pivo-ortho:recovery:v1');dispatch({t:'clearRecovery'});dispatch({t:'setStatus',status:'Browser recovery discarded. Download the current project before closing.'});dispatch({t:'setDialog',dialog:null});}catch{dispatch({t:'setStatus',status:'Recovery discard failed: browser storage unavailable.'});}}}>{confirm?'Discard recovery':'Discard recovery…'}</button></footer></div></div>;
+ const {state,dispatch,refreshRecovery,restoreRecovery,discardRecovery}=useStore();
+ const [selected,setSelected]=useState(0),[error,setError]=useState(''),[busy,setBusy]=useState(false);
+ const entry=state.recoveryCopies[selected];
+ const perform=async(run:()=>Promise<void>)=>{setBusy(true);setError('');try{await run();}catch(e){setError(String(e));}finally{setBusy(false);}};
+ return <div className="dialog-backdrop"><div className="dialog" role="dialog" aria-modal="true" aria-labelledby="recovery-title"><header><h2 id="recovery-title">Browser recovery</h2></header><div className="dialog-body">
+ <p>Recovery copies are separate from downloaded projects. Invalid copies remain available as raw backups. Each browser session keeps its own copy.</p>
+ {state.recoveryCopies.length?<label>Recovery copy<select value={selected} onChange={e=>{setSelected(Number(e.target.value));setError('');}}>{state.recoveryCopies.map((copy,n)=><option key={copy.id} value={n}>{copy.name} — {new Date(copy.at).toLocaleString()}</option>)}</select></label>:<p>No recovery copies are stored.</p>}
+ {error&&<p role="alert">{error}</p>}</div><footer className="suite-dialog-footer">
+ <button disabled={busy} onClick={()=>dispatch({t:'setDialog',dialog:null})}>Cancel</button>
+ <button disabled={busy} onClick={()=>void perform(refreshRecovery)}>Refresh</button>
+ <button disabled={busy||!entry} onClick={()=>{if(!entry)return;const blob=new Blob([typeof entry.data==='string'?entry.data:new Uint8Array(entry.data)],{type:'application/octet-stream'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='pivo-ortho-recovery-backup.pvo';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);}}>Download backup</button>
+ <button className="danger" disabled={busy||!entry} onClick={()=>{if(entry&&confirm('Permanently discard this recovery copy? Download its backup first. Current editing work is kept.'))void perform(async()=>{await discardRecovery(entry);setSelected(0);});}}>Discard</button>
+ <button disabled={busy||!entry} onClick={()=>{if(entry)void perform(()=>restoreRecovery(entry));}}>Restore</button>
+ </footer></div></div>;
 }
-
 function StatusBar(): React.JSX.Element {
   const { state } = useStore();
   return (
@@ -142,9 +151,8 @@ function StatusBar(): React.JSX.Element {
     </footer>
   );
 }
-
 function AppInner(): React.JSX.Element {
-  const { state, dispatch, commit, cancelDrag } = useStore();
+  const { state, dispatch, commit, cancelDrag, flushRecovery } = useStore();
   const project = state.project;
   useEffect(()=>installDisclosureMenus(),[]);
   const [toolbarTarget,setToolbarTarget]=useState<HTMLDivElement|null>(null);
@@ -161,41 +169,34 @@ function AppInner(): React.JSX.Element {
   const [previewProject, setPreviewProject] = useState<Project | null>(null);
   const [paintPreview,setPaintPreview]=useState<Project|null>(null);
   const [previewTick, setPreviewTick] = useState(0);
-  const [noWebGL, setNoWebGL] = useState(false);
+  // Probe before mounting renderer children, so a missing context cannot hide native-file controls.
+  const [noWebGL] = useState(()=>{try{const context=document.createElement('canvas').getContext('webgl2');if(!context)return true;context.getExtension('WEBGL_lose_context')?.loseContext();return false;}catch{return true;}});
   const dragCtxRef = useRef<{
     startWorld: Vec3 | null;
     kind: 'vertex' | 'meshMove' | null;
     meshIds: string[];
     vertexIds: string[];
   }>({ startWorld: null, kind: null, meshIds: [], vertexIds: [] });
-
+  const runtimeRef=useRef({state,previewProject,paintPreview});runtimeRef.current={state,previewProject,paintPreview};
+  useEffect(()=>{
+    if(__STANDALONE__)return;
+    installUpdatePrompt({ready:()=>{const current=runtimeRef.current;return !current.state.dialog&&!current.state.exporting&&!current.previewProject&&!current.paintPreview&&!gizmoBaseline.current&&!dragCtxRef.current.kind;},flush:flushRecovery,notify:message=>dispatch({t:'setStatus',status:message})});
+  },[flushRecovery]);
   const selFaceIds = useMemo(() => new Set(state.selection.faceIds), [state.selection.faceIds]);
   const selVertexIds = useMemo(() => new Set(state.selection.vertexIds), [state.selection.vertexIds]);
   const selMeshIds = useMemo(() => new Set(state.selection.meshIds), [state.selection.meshIds]);
-
-  // WebGL probe: if context creation fails the editor renders an explanatory
-  // fallback instead of an inert interface.
-  useEffect(() => {
-    try {
-      const c = document.createElement('canvas');
-      if (!(c.getContext('webgl2') || c.getContext('webgl'))) setNoWebGL(true);
-    } catch {
-      setNoWebGL(true);
-    }
-  }, []);
-
   // Focus containment for all dialogs, including Escape from text inputs.
   useEffect(()=>{
     if(!state.dialog)return;
     const prior=document.activeElement as HTMLElement|null;
-    const dialog=document.querySelector<HTMLElement>('.dialog');
-    const items=()=>Array.from(dialog?.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex="0"]')??[]).filter(el=>el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden');
-    (dialog?.querySelector<HTMLElement>('[data-dialog-initial]')??items()[0])?.focus();
-    const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){if(dialog?.querySelector<HTMLButtonElement>('[aria-label="Close exports"]')?.disabled)return;e.preventDefault();dispatch({t:'setDialog',dialog:null});}if(e.key==='Tab'){const all=items();if(!all.length)return;const index=all.indexOf(document.activeElement as HTMLElement);if(e.shiftKey&&index<=0){e.preventDefault();all[all.length-1].focus()}else if(!e.shiftKey&&index===all.length-1){e.preventDefault();all[0].focus()}}};
-    const keepFocus=(e:FocusEvent)=>{if(dialog&&e.target instanceof Node&&!dialog.contains(e.target))items()[0]?.focus();};
-    window.addEventListener('keydown',key);document.addEventListener('focusin',keepFocus);return()=>{window.removeEventListener('keydown',key);document.removeEventListener('focusin',keepFocus);if(prior?.isConnected)prior.focus()};
+    const dialog=()=>document.querySelector<HTMLElement>('.dialog');
+    const items=()=>Array.from(dialog()?.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],[tabindex="0"]')??[]).filter(el=>el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden');
+    const focus=()=>{const current=dialog();if(!current)return;(current.querySelector<HTMLElement>('[data-dialog-initial]')??items()[0])?.focus();observer.disconnect();};
+    const observer=new MutationObserver(focus);observer.observe(document.body,{childList:true,subtree:true});focus();
+    const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){if(dialog()?.querySelector<HTMLButtonElement>('[aria-label="Close exports"]')?.disabled)return;e.preventDefault();dispatch({t:'setDialog',dialog:null});}if(e.key==='Tab'){const all=items();if(!all.length)return;const index=all.indexOf(document.activeElement as HTMLElement);if(e.shiftKey&&index<=0){e.preventDefault();all[all.length-1].focus()}else if(!e.shiftKey&&index===all.length-1){e.preventDefault();all[0].focus()}}};
+    const keepFocus=(e:FocusEvent)=>{const current=dialog();if(current&&e.target instanceof Node&&!current.contains(e.target))items()[0]?.focus();};
+    window.addEventListener('keydown',key);document.addEventListener('focusin',keepFocus);return()=>{observer.disconnect();window.removeEventListener('keydown',key);document.removeEventListener('focusin',keepFocus);if(prior?.isConnected)prior.focus()};
   },[state.dialog,dispatch]);
-
   const onGizmo=useCallback((event:GizmoEvent)=>{
     if(event.phase==='start'){gizmoBaseline.current={project:structuredClone(project),selection:structuredClone(state.selection)};return;}
     const base=gizmoBaseline.current;if(!base)return;
@@ -208,7 +209,6 @@ function AppInner(): React.JSX.Element {
     gizmoBaseline.current=null;setPreviewProject(null);
   },[project,state.selection,commit,cancelDrag,dispatch]);
   const frame=useMemo(()=>transformFrame(project,state.selection),[project,state.selection]);
-
   // --- selection from viewports ---
   const onSelect = useCallback((p: SelectPayload) => {
     const sel = state.selection;
@@ -267,7 +267,6 @@ function AppInner(): React.JSX.Element {
       },
     });
   }, [state.selection, project, rig, dispatch]);
-
   // --- drag transforms (vertex/mesh move, ground-plane projection) ---
   const onDrag = useCallback((p: DragPayload) => {
     const sel = state.selection;
@@ -301,7 +300,6 @@ function AppInner(): React.JSX.Element {
     const delta: Vec3 = snap > 0
       ? [Math.round(d[0] / snap) * snap, Math.round(d[1] / snap) * snap, Math.round(d[2] / snap) * snap]
       : d;
-
     if (p.phase === 'move') {
       setPreviewProject((prev) => {
         if (!prev) return prev;
@@ -364,7 +362,6 @@ function AppInner(): React.JSX.Element {
     dragCtxRef.current = { startWorld: null, kind: null, meshIds: [], vertexIds: [] };
     setPreviewProject(null);
   }, [state.selection, state.snap, project, commit, cancelDrag]);
-
   // Keyboard shortcuts — suppressed while typing in inputs.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -468,7 +465,6 @@ function AppInner(): React.JSX.Element {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [state.mode, state.selection, state.dialog, state.exporting, state.viewLayout, state.project, project, dispatch, previewProject, cancelDrag, commit]);
-
   // Ctrl+Z/Y/S/O with input guard.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -485,9 +481,7 @@ function AppInner(): React.JSX.Element {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [state.dialog,state.exporting]);
-
-  if (noWebGL) return <WebGLFallback />;
-
+  if (noWebGL) return <div className="app"><Header paintTab={paintTab} onPaintTab={setPaintTab} onResetViews={()=>{}}/><WebGLFallback/>{state.dialog==='recovery'&&<RecoveryDialog/>}{state.dialog==='about'&&<AboutDialog onClose={()=>dispatch({t:'setDialog',dialog:null})}/>}{state.dialog==='shortcuts'&&<ShortcutsDialog onClose={()=>dispatch({t:'setDialog',dialog:null})}/>}{state.dialog==='help'&&<HelpDialog onClose={()=>dispatch({t:'setDialog',dialog:null})}/>}</div>;
   return (
     <div className="app">
       <Header paintTab={paintTab} onPaintTab={tab=>{window.dispatchEvent(new CustomEvent('pivo-ortho:cancel-gesture'));setPaintPreview(null);setPaintTab(tab);}} onResetViews={()=>{setRig({...DEFAULT_RIG});dispatch({t:'setLayout',layout:'quad'});}}/>
@@ -554,11 +548,10 @@ function AppInner(): React.JSX.Element {
       {state.dialog==='recovery'&&<RecoveryDialog/>}
       {state.dialog === 'shortcuts' && <ShortcutsDialog onClose={() => dispatch({ t: 'setDialog', dialog: null })} />}
       {state.dialog === 'help' && <HelpDialog onClose={() => dispatch({ t: 'setDialog', dialog: null })} />}{state.dialog === 'about' && <AboutDialog onClose={() => dispatch({ t: 'setDialog', dialog: null })} />}
-      {state.dialog === 'exports' && <ExportsDialog cameraRig={rig} currentView={activeView} onClose={() => dispatch({ t: 'setDialog', dialog: null })} />}
+      {state.dialog === 'exports' && <React.Suspense fallback={<div role="status">Loading export tools…</div>}><ExportsDialog cameraRig={rig} currentView={activeView} onClose={() => dispatch({ t: 'setDialog', dialog: null })} /></React.Suspense>}
     </div>
   );
 }
-
 /**
  * Rectangle vertex selection: project all visible-mesh vertices into the
  * viewport camera (through-depth — depth does not restrict hits). The screen
@@ -593,7 +586,6 @@ function rectSelect(project: Project, p: SelectPayload, camRig: CameraRig): stri
   }
   return hits;
 }
-
 export default function App(): React.JSX.Element {
   return (
     <ErrorBoundary>

@@ -54,3 +54,7 @@ npm run examples   # rebuilds the robot demo and performance fixtures in example
 - Follow the [User guide](/guide) through the full Model → Paint → Animate → Save → Export workflow.
 - Read [File formats](/formats) for `.pvo`, OBJ and glTF details.
 - Drive the engine directly with the [Core & IO API](/api).
+
+## Release validation and updates
+
+Production browser checks use `npm run test:release` against the built app at its deployment subpath. Unit tests are manually authorized. See [production readiness](production-readiness.md) for current evidence and limitations. Updates show a prompt and require recovery to be stored before reload. Download native project backups regularly; browser site data can be cleared by the browser or user.

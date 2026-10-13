@@ -53,7 +53,7 @@ Shortcuts are suppressed in text inputs. Use Help for the full limitations and s
 ## Storage & safety
 
 - No accounts, telemetry, cloud uploads or runtime font/icon CDN dependencies.
-- A namespaced localStorage recovery copy is debounced and validated on reload; quota/unavailable-storage failures are reported. **Save a `.pvo` copy for reliable persistence** — clearing browser site data removes recovery.
+- A namespaced IndexedDB recovery copy is debounced and offered for explicit restoration on reload; quota/unavailable-storage failures are reported. **Save a `.pvo` copy for reliable persistence** — clearing browser site data removes recovery.
 - *Clear recovery* removes the stored copy, not the current document; later edits resume autosave. The iframe preview may restrict storage/downloads compared with running the packaged app directly.
 - Mesh and folder locks block geometry, UV, transforms and associated clip edits. Global atlas/palette edits still affect the shared texture. Folder merging bakes base transforms and removes source clips; it is undoable and explicitly reported.
 - File size/count limits reject malformed or excessive projects; the app does not execute code from project files.

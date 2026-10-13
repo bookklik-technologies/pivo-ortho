@@ -90,6 +90,7 @@ function ViewportCanvas(props: ViewportProps): React.JSX.Element {
   const rigRef = useRef(rig);
   rigRef.current = rig;
   const failedRef = useRef(false);
+  const [graphicsError,setGraphicsError]=useState(false);
 
   const interaction = useRef<{
     mode: null | 'orbit' | 'pan' | 'select' | 'drag';
@@ -107,8 +108,13 @@ function ViewportCanvas(props: ViewportProps): React.JSX.Element {
       rendererRef.current = r;
     } catch {
       failedRef.current = true;
+      setGraphicsError(true);
     }
+    const lost=(event:Event)=>{event.preventDefault();failedRef.current=true;interaction.current.mode=null;setGraphicsError(true);window.dispatchEvent(new CustomEvent('pivo-ortho:cancel-gesture'));};
+    const restored=()=>{failedRef.current=false;setGraphicsError(false);setSizeTick(n=>n+1);};
+    canvas.addEventListener('webglcontextlost',lost);canvas.addEventListener('webglcontextrestored',restored);
     return () => {
+      canvas.removeEventListener('webglcontextlost',lost);canvas.removeEventListener('webglcontextrestored',restored);
       bundleRef.current?.dispose();
       rendererRef.current?.dispose();
       rendererRef.current = null;
@@ -399,6 +405,7 @@ function ViewportCanvas(props: ViewportProps): React.JSX.Element {
       aria-label={`${view} viewport — click to select, right-drag to pan, wheel to zoom`}
     >
       <canvas ref={canvasRef} />
+      {graphicsError&&<div className="viewport-label" role="alert">Graphics unavailable. Save project remains available; the viewport resumes after context recovery.</div>}
       <GizmoLayer camera={gizmoCamera} frame={props.gizmoFrame??null} mode={modelTool} space={props.gizmoSpace??'world'} translationSnap={props.translationSnap??0} rotationSnap={props.rotationSnap??0} scaleSnap={props.scaleSnap??0} onTransform={event=>propsRef.current.onGizmo?.(event)}/>
       <span className="viewport-label">{view === 'persp' ? 'Perspective' : view[0].toUpperCase() + view.slice(1)}</span>
     </div>

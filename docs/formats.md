@@ -5,7 +5,7 @@
 Ortho's own editable format is version **1** and has remained compatible across releases. Open **validates** before replacing the document; invalid files are rejected without discarding current work. New/Open are undoable in this release.
 
 ::: tip
-Save a `.pvo` copy for reliable persistence — the localStorage recovery copy is removed when browser site data is cleared.
+Save a `.pvo` copy for reliable persistence — the IndexedDB recovery copy is removed when browser site data is cleared.
 :::
 
 ## Export bundles

@@ -5,15 +5,21 @@ import { validateProject, MAX_PROJECT_BYTES, ValidationError } from './validate'
 
 export function serializeProject(project: Project): string {
   validateProject(project);
-  return JSON.stringify(project);
+  const text = JSON.stringify(project);
+  assertProjectBytes(text);
+  return text;
+}
+
+export function assertProjectBytes(text: string): void {
+  if (text.length > MAX_PROJECT_BYTES || new TextEncoder().encode(text).byteLength > MAX_PROJECT_BYTES) {
+    throw new ValidationError(`project exceeds the ${MAX_PROJECT_BYTES} UTF-8 byte limit`);
+  }
 }
 
 /** Parse a stored project string strictly; throws ValidationError on any deviation. */
 export function parseProject(text: string): Project {
   if (typeof text !== 'string') throw new ValidationError('project data must be a string');
-  if (text.length > MAX_PROJECT_BYTES) {
-    throw new ValidationError(`project exceeds the ${MAX_PROJECT_BYTES} byte limit`);
-  }
+  assertProjectBytes(text);
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
@@ -27,9 +33,10 @@ export function parseProject(text: string): Project {
 
 const DANGEROUS = new Set(['__proto__', 'prototype', 'constructor']);
 
-function rejectDangerousKeys(value: unknown, path: string): void {
+function rejectDangerousKeys(value: unknown, path: string, depth = 0): void {
+  if (depth > 64) throw new ValidationError('project JSON nesting exceeds 64 levels');
   if (Array.isArray(value)) {
-    for (let i = 0; i < value.length; i++) rejectDangerousKeys(value[i], `${path}[${i}]`);
+    for (let i = 0; i < value.length; i++) rejectDangerousKeys(value[i], `${path}[${i}]`, depth + 1);
     return;
   }
   if (value && typeof value === 'object') {
@@ -37,7 +44,7 @@ function rejectDangerousKeys(value: unknown, path: string): void {
       if (DANGEROUS.has(key)) {
         throw new ValidationError(`project contains a forbidden key "${key}" at ${path}`);
       }
-      rejectDangerousKeys((value as Record<string, unknown>)[key], `${path}.${key}`);
+      rejectDangerousKeys((value as Record<string, unknown>)[key], `${path}.${key}`, depth + 1);
     }
   }
 }

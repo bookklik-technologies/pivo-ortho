@@ -35,7 +35,7 @@ features:
   - title: Own format + open exports
     details: Editable .pvo projects, OBJ/MTL/PNG and glTF/bin/PNG ZIP bundles, plus rendered PNG, animated GIF and sprite-sheet exports with retro effects.
   - title: Local-first & private
-    details: No accounts, telemetry, cloud uploads or runtime font/icon CDNs. A namespaced localStorage recovery copy protects unsaved work.
+    details: No accounts, telemetry, cloud uploads or runtime font/icon CDNs. A namespaced IndexedDB recovery copy protects unsaved work.
   - title: Recorded verification
     details: The 10 October 2026 report records 320 unit/integration tests and 96 Chromium browser tests passing, including an independent Three.js glTF importer and a 50-mesh/2,100-face fixture. It predates the PWA addition.
 ---

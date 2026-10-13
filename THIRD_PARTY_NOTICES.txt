@@ -1,10 +1,10 @@
-PiVo Ortho — third-party runtime and test dependency notices
+PiVo Ortho â€” third-party runtime and test dependency notices
 
-The following texts are copied from the installed packages. PiVo Ortho source is licensed under the MIT License (see LICENSE); this notice file covers only the bundled dependencies.
+The following license texts come from the installed packages. PiVo Ortho source is licensed under MIT (see LICENSE).
 
 
 ========================================================================
-react 19.3.0 — MIT
+react 19.3.0 â€” MIT
 
 MIT License
 
@@ -30,7 +30,7 @@ SOFTWARE.
 
 
 ========================================================================
-react-dom 19.3.0 — MIT
+react-dom 19.3.0 â€” MIT
 
 MIT License
 
@@ -56,7 +56,7 @@ SOFTWARE.
 
 
 ========================================================================
-scheduler 0.28.0 — MIT
+scheduler 0.28.0 â€” MIT
 
 MIT License
 
@@ -82,7 +82,7 @@ SOFTWARE.
 
 
 ========================================================================
-three 0.180.0 — MIT
+three 0.180.0 â€” MIT
 
 The MIT License
 
@@ -108,7 +108,7 @@ THE SOFTWARE.
 
 
 ========================================================================
-fflate 0.8.3 — MIT
+fflate 0.8.3 â€” MIT
 
 MIT License
 
@@ -133,7 +133,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ========================================================================
-gifenc 1.0.3 — MIT
+gifenc 1.0.3 â€” MIT
 
 The MIT License (MIT)
 Copyright (c) 2017 Matt DesLauriers
@@ -159,7 +159,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 ========================================================================
-gifuct-js 2.1.2 — MIT
+gifuct-js 2.1.2 â€” MIT
 
 The MIT License (MIT)
 
@@ -186,7 +186,7 @@ SOFTWARE.
 
 
 ========================================================================
-js-binary-schema-parser 2.0.3 — MIT
+js-binary-schema-parser 2.0.3 â€” MIT
 
 The MIT License (MIT)
 
@@ -213,7 +213,7 @@ SOFTWARE.
 
 
 ========================================================================
-lucide-react 1.55.0 — ISC
+lucide-react 1.55.0 â€” ISC
 
 ISC License
 
@@ -261,7 +261,7 @@ SOFTWARE.
 
 
 ========================================================================
-@fontsource-variable/outfit 5.3.0 — OFL-1.1
+@fontsource-variable/outfit 5.3.0 â€” OFL-1.1
 
 Copyright 2021 The Outfit Project Authors (https://github.com/Outfitio/Outfit-Fonts)
 
@@ -356,3 +356,29 @@ INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
 DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
+
+
+========================================================================
+pako 2.2.0 â€” (MIT AND Zlib)
+
+(The MIT License)
+
+Copyright (C) 2014-2017 by Vitaly Puzrin and Andrei Tuputcyn
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.

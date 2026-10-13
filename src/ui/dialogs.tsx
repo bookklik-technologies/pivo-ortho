@@ -1,48 +1,21 @@
 import {IconClose} from './icons';
+import {shortcutLabel} from './suite';
 // PiVo Ortho — help/shortcuts dialog and error boundary + WebGL fallback.
 import React from 'react';
 import { useStore } from './store';
 
-const SHORTCUTS: Array<[string, string]> = [
-  ['1 / 2 / 3', 'Model / Paint / Animate mode'],
-  ['Q / W / E', 'Pick mesh / face / vertex'],
-  ['V / T / R / S', 'Model: select, move, rotate, scale'],
-  ['B / E / F / L / R / C / M / I', 'Paint: pen, eraser, fill, line, rectangle, ellipse, marquee, eyedropper'],
-  ['X', 'Delete face / mesh (context of selection)'],
-  ['D', 'Duplicate selection'],
-  ['Copy / Paste buttons', 'Context-specific mesh, UV, marquee and clip clipboard'],
-  ['Ctrl/Cmd+Z / Ctrl/Cmd+Shift+Z (Y also works)', 'Undo / redo'],
-  ['Ctrl/Cmd+S / Ctrl/Cmd+O', 'Save .pvo / open project'],
-  ['F', 'Frame scene (Model)'],
-  ['Esc', 'Cancel drag / close dialog'],
-  ['Alt+drag / Middle-drag', 'Orbit (perspective) or pan'],
-  ['Right-drag / Shift+Middle', 'Pan viewport'],
-  ['Wheel', 'Zoom viewport'],
-  ['Shift+click', 'Extend selection'],
-  ['Right-click (Paint)', 'Paint with secondary color'],
+const SHORTCUT_SECTIONS: Array<[string, Array<[string,string]>]> = [
+ ['Document', [['Mod+S','Save project (.pvo)'],['Mod+O','Open project'],['Mod+Z','Undo'],['Mod+Shift+Z / Mod+Y','Redo'],['Escape','Cancel gesture / close dialog']]],
+ ['Editor', [['1 / 2 / 3','Model / Paint / Animate mode'],['Q / W / E','Pick mesh / face / vertex'],['V / T / R / S','Model: select / move / rotate / scale'],['B / E / F / L / R / C / M / I','Paint: pen / eraser / fill / line / rectangle / ellipse / marquee / eyedropper'],['X','Delete face / mesh (selection context)'],['D','Duplicate selection'],['Copy / Paste buttons','Mesh, UV, marquee and clip clipboard'],['Shift+click','Extend selection'],['Right mouse click (Paint)','Paint with secondary color']]],
+ ['Viewport', [['F','Frame scene (Model)'],['Alt+drag / Middle mouse drag','Orbit (perspective) or pan'],['Right mouse drag / Shift+Middle mouse drag','Pan viewport'],['Wheel','Zoom viewport']]],
 ];
-
-export function ShortcutsDialog({ onClose }: { onClose: () => void }): React.JSX.Element {
-  return (
-    <div className="dialog-backdrop" role="presentation">
-      <div className="dialog" role="dialog" aria-modal="true" aria-labelledby="sc-title">
-        <header>
-          <h2 id="sc-title">Keyboard shortcuts</h2>
-          <button type="button" className="close" aria-label="Close shortcuts" onClick={onClose}><IconClose/></button>
-        </header>
-        <div className="dialog-body">
-          <table className="shortcut-table">
-            <tbody>
-              {SHORTCUTS.map(([k, v]) => (
-                <tr key={k}><th scope="row">{k}</th><td>{v}</td></tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="hint">Shortcuts are suppressed while typing in text inputs. Screen-reader access to the 3D canvas is limited; all editing actions have labeled panel equivalents.</p>
-        </div>
-      </div>
-    </div>
-  );
+export function ShortcutsDialog({onClose}:{onClose:()=>void}):React.JSX.Element {
+ return <div className="dialog-backdrop" role="presentation"><div className="dialog suite-shortcuts-dialog" role="dialog" aria-modal="true" aria-labelledby="sc-title">
+  <header className="suite-shortcuts-header"><h2 className="suite-shortcuts-title" id="sc-title">Keyboard shortcuts</h2></header>
+  <div className="suite-shortcuts-body">{SHORTCUT_SECTIONS.map(([section,rows])=><React.Fragment key={section}><h3 className="suite-shortcuts-section">{section}</h3><table className="suite-shortcut-table"><thead><tr><th scope="col">Shortcut</th><th scope="col">Action</th></tr></thead><tbody>{rows.map(([keys,action])=><tr key={keys}><th scope="row"><kbd>{shortcutLabel(keys)}</kbd></th><td>{action}</td></tr>)}</tbody></table></React.Fragment>)}
+   <p className="suite-shortcuts-note">Shortcuts are inactive while typing or inside dialogs. Screen-reader access to the 3D canvas is limited; editing actions have labeled panel equivalents.</p>
+  </div><footer className="suite-shortcuts-actions"><button type="button" className="suite-shortcuts-close" data-dialog-initial onClick={onClose}>Close</button></footer>
+ </div></div>;
 }
 
 export function HelpDialog({ onClose }: { onClose: () => void }): React.JSX.Element {
@@ -63,7 +36,7 @@ export function HelpDialog({ onClose }: { onClose: () => void }): React.JSX.Elem
           <p><strong>Pixel effects</strong> — outline the model silhouette, blend scanline rows, and add independent bottom-left/right bitmap tags. Preview scrubbing/playback uses the same output pixels as GIF, PNG and sprite frames. Reset effects removes decorations.</p>
           <p><strong>Theme</strong> — use the Sun/Moon header button for light/dark. The choice is remembered when storage is available. UI colors change, but your palette, scene background, project data and exports do not.</p>
           <h3>Files</h3>
-          <p>Save downloads a .pvo project; Open validates before replacing the workspace. A debounced recovery copy is stored in localStorage and is validated and restored automatically on reload. Use File → Recovery to remove the stored copy; future edits create a new one.</p>
+          <p>Save downloads a .pvo project; Open validates before replacing the workspace. Browser recovery uses IndexedDB with a separate copy per session. File → Recovery offers Restore, Download backup, and Discard; invalid copies are preserved until you resolve them.</p>
           <h3>Known limitations</h3>
           <ul>
             <li>Desktop mouse/keyboard only; touch editing is not a goal.</li>
@@ -111,8 +84,8 @@ export function WebGLFallback(): React.JSX.Element {
       <p>
         PiVo Ortho renders 3D views with WebGL, which this browser or device
         does not currently provide. Enable hardware acceleration or try a recent
-        desktop Firefox, Chrome or Edge. No project data was lost — recovery data
-        lives in localStorage.
+        desktop Firefox, Chrome or Edge. Use Save project to download a backup;
+        browser recovery is available through File → Recovery.
       </p>
     </div>
   );
