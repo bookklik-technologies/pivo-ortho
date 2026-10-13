@@ -1,5 +1,8 @@
 ---
 layout: home
+titleTemplate: false
+title: PiVo Ortho Documentation
+description: Tutorials, guides, file formats, and API reference for PiVo Ortho. Learn to model, texture, animate, and export low-poly 3D scenes.
 
 hero:
   name: "PiVo Ortho"

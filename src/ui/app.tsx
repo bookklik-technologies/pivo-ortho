@@ -99,12 +99,13 @@ function Header({paintTab,onPaintTab,onResetViews}:{paintTab:string;onPaintTab:(
   const recovery=state.recoveryState==='stored'&&state.recoverySnapshot!==JSON.stringify(project)?'pending':state.recoveryState;
   return <>
     <header className="app-header suite-header">
-      <span className="suite-brand"><img src={logo} alt=""/>PiVo Ortho</span>
+      <h1 className="suite-brand"><img src={logo} alt=""/>PiVo Ortho</h1>
       <nav className="suite-menus" aria-label="Application menus">
         <SuiteMenu label="File"><button onClick={newProject}>New project</button><button aria-label="Open project" onClick={()=>fileRef.current?.click()}>Open project…</button><button onClick={save}>Save project</button><button onClick={()=>dispatch({t:'setDialog',dialog:'exports'})}>Export…</button><button onClick={()=>dispatch({t:'setDialog',dialog:'recovery'})}>Recovery…</button></SuiteMenu>
         <SuiteMenu label="Edit"><button disabled={!history?.canUndo} onClick={doUndo}>Undo</button><button disabled={!history?.canRedo} onClick={doRedo}>Redo</button></SuiteMenu>
         <SuiteMenu label="View"><button onClick={onResetViews}>Reset workspace views</button><button onClick={()=>dispatch({t:'setLayout',layout:state.viewLayout==='quad'?'persp':'quad'})}>Four views / maximize 3D</button><button onClick={()=>document.querySelector<HTMLButtonElement>('.suite-dock-toggle')?.click()}>Toggle panels</button><button onClick={useSystem}>System appearance</button><button onClick={()=>{setTheme('light');applyTheme('light');saveTheme('light');}}>Light appearance</button><button onClick={()=>{setTheme('dark');applyTheme('dark');saveTheme('dark');}}>Dark appearance</button><button onClick={()=>document.querySelector('.app')?.classList.toggle('suite-diagnostics')}>Technical diagnostics</button></SuiteMenu>
         <SuiteMenu label="Help"><button onClick={()=>dispatch({t:'setDialog',dialog:'shortcuts'})}>Keyboard shortcuts…</button><button onClick={()=>dispatch({t:'setDialog',dialog:'help'})}>Usage help…</button><button onClick={()=>dispatch({t:'setDialog',dialog:'about'})}>About PiVo Ortho</button></SuiteMenu>
+        <a href="./docs/" target="_blank" rel="noopener">Docs</a>
       </nav>
       <div className="suite-header-actions">
         <button onClick={doUndo} disabled={!history?.canUndo} aria-label="Undo" title="Undo (Ctrl/Cmd+Z)"><IconUndo/></button>

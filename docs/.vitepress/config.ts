@@ -1,17 +1,58 @@
 import { defineConfig } from 'vitepress'
 
 const base = process.env.DOCS_BASE || '/'
+const appUrl = 'https://bookklik-technologies.github.io/pivo-ortho/'
+const docsUrl = appUrl + 'docs/'
+const socialImage = docsUrl + 'screenshots/app.png'
 
 export default defineConfig({
   base,
   lang: 'en-US',
   title: 'PiVo Ortho',
+  titleTemplate: ':title | PiVo Ortho Documentation',
   description:
     'A local-first browser low-poly modeling, texturing and animation editor. No account, no telemetry, no cloud.',
   head: [['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}icon.svg` }]],
+  sitemap: {
+    hostname: docsUrl,
+    transformItems: (items) => items.filter((item) => item.url !== '404.html'),
+  },
+  transformHead({ page }) {
+    if (page === '404.md') return [['meta', { name: 'robots', content: 'noindex, follow' }]]
+  },
+  transformPageData(pageData) {
+    pageData.frontmatter.head ??= []
+    if (pageData.relativePath === '404.md') return
+    const canonical = docsUrl + pageData.relativePath.replace(/index\.md$/, '').replace(/\.md$/, '.html')
+    const title = pageData.frontmatter.layout === 'home' || pageData.title === 'PiVo Ortho' || !pageData.title
+      ? 'PiVo Ortho Documentation'
+      : pageData.title + ' | PiVo Ortho Documentation'
+    const description = pageData.description
+    pageData.frontmatter.head.push(
+      ['link', { rel: 'canonical', href: canonical }],
+      ['meta', { name: 'robots', content: 'index, follow, max-image-preview:large' }],
+      ['meta', { property: 'og:type', content: 'website' }],
+      ['meta', { property: 'og:site_name', content: 'PiVo Ortho' }],
+      ['meta', { property: 'og:title', content: title }],
+      ['meta', { property: 'og:description', content: description }],
+      ['meta', { property: 'og:url', content: canonical }],
+      ['meta', { property: 'og:locale', content: 'en_US' }],
+      ['meta', { property: 'og:image', content: socialImage }],
+      ['meta', { property: 'og:image:type', content: 'image/png' }],
+      ['meta', { property: 'og:image:width', content: '1440' }],
+      ['meta', { property: 'og:image:height', content: '1000' }],
+      ['meta', { property: 'og:image:alt', content: 'PiVo Ortho editor showing a low-poly robot in four viewports' }],
+      ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+      ['meta', { name: 'twitter:title', content: title }],
+      ['meta', { name: 'twitter:description', content: description }],
+      ['meta', { name: 'twitter:image', content: socialImage }],
+      ['meta', { name: 'twitter:image:alt', content: 'PiVo Ortho editor showing a low-poly robot in four viewports' }],
+    )
+  },
   themeConfig: {
     logo: '/logo.svg',
     nav: [
+      { text: 'Open app', link: appUrl, target: '_blank', rel: 'noopener' },
       { text: 'Tutorials', link: '/tutorials/' },
       { text: 'Guide', link: '/guide' },
       { text: 'Formats', link: '/formats' },
