@@ -2,7 +2,7 @@
 
 Add one full Y-axis turn over two seconds, preview it, save the editable animation, and export a small GIF.
 
-**Before you start:** Continue from [Paint and adjust the cube's texture](/tutorials/paint-cube), or open <a href="/tutorials/painted-cube.pvo" download>painted-cube.pvo</a>.
+**Before you start:** Continue from [Paint and adjust the cube's texture](/tutorials/paint-cube), or open <a href="./painted-cube.pvo" download>painted-cube.pvo</a>.
 
 **Time:** about 5–10 minutes. Screenshots show the dark desktop interface; click them for full size.
 
@@ -58,7 +58,7 @@ Click the dialog's **Export** button and wait for capture and encoding to finish
 
 A rotating-cube `.pvo` project and a 24-frame GIF covering the two-second timeline.
 
-<a href="/tutorials/rotating-cube.pvo" download>Download the finished project</a>.
+<a href="./rotating-cube.pvo" download>Download the finished project</a>.
 
 - [Animated GIF](/tutorials/rotating-cube.gif)
 

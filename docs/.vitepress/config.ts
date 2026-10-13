@@ -1,11 +1,14 @@
 import { defineConfig } from 'vitepress'
 
+const base = process.env.DOCS_BASE || '/'
+
 export default defineConfig({
+  base,
   lang: 'en-US',
   title: 'PiVo Ortho',
   description:
     'A local-first browser low-poly modeling, texturing and animation editor. No account, no telemetry, no cloud.',
-  head: [['link', { rel: 'icon', type: 'image/svg+xml', href: '/icon.svg' }]],
+  head: [['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}icon.svg` }]],
   themeConfig: {
     logo: '/logo.svg',
     nav: [

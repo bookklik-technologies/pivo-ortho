@@ -2,7 +2,7 @@
 
 Paint a blue atlas with a yellow stripe, then nudge a selected face's UVs while watching the real model preview.
 
-**Before you start:** Continue from [Create your first cube model](/tutorials/first-model), or download <a href="/tutorials/first-cube.pvo" download>first-cube.pvo</a> and choose **File → Open project…**.
+**Before you start:** Continue from [Create your first cube model](/tutorials/first-model), or download <a href="./first-cube.pvo" download>first-cube.pvo</a> and choose **File → Open project…**.
 
 **Time:** about 5–10 minutes. Screenshots show the dark desktop interface; click them for full size.
 
@@ -58,7 +58,7 @@ Click **Save project** and keep the download as **painted-cube.pvo**. The atlas 
 
 A blue cube with yellow texture detail and a rightward UV adjustment on one face.
 
-<a href="/tutorials/painted-cube.pvo" download>Download the finished project</a>.
+<a href="./painted-cube.pvo" download>Download the finished project</a>.
 
 ## If something looks different
 

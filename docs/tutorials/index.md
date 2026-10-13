@@ -6,9 +6,9 @@ Each lesson takes roughly 5–10 minutes and includes four screenshots from the 
 
 | Lesson | You will learn | Finished project |
 | --- | --- | --- |
-| [1. Create your first cube model](/tutorials/first-model) | One cube with Position X 0.25, Scale Y 1.5, and Rotation Y 15°. | <a href="/tutorials/first-cube.pvo" download>Download checkpoint</a> |
-| [2. Paint and adjust the cube's texture](/tutorials/paint-cube) | A blue cube with yellow texture detail and a rightward UV adjustment on one face. | <a href="/tutorials/painted-cube.pvo" download>Download checkpoint</a> |
-| [3. Rotate the cube and export a GIF](/tutorials/animate-export) | A rotating-cube `.pvo` project and a 24-frame GIF covering the two-second timeline. | <a href="/tutorials/rotating-cube.pvo" download>Download checkpoint</a> |
+| [1. Create your first cube model](/tutorials/first-model) | One cube with Position X 0.25, Scale Y 1.5, and Rotation Y 15°. | <a href="./first-cube.pvo" download>Download checkpoint</a> |
+| [2. Paint and adjust the cube's texture](/tutorials/paint-cube) | A blue cube with yellow texture detail and a rightward UV adjustment on one face. | <a href="./painted-cube.pvo" download>Download checkpoint</a> |
+| [3. Rotate the cube and export a GIF](/tutorials/animate-export) | A rotating-cube `.pvo` project and a 24-frame GIF covering the two-second timeline. | <a href="./rotating-cube.pvo" download>Download checkpoint</a> |
 
 ## Before you start
 

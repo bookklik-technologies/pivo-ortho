@@ -29,7 +29,8 @@ export default defineConfig({
     workbox: {
       globPatterns: ['**/*.{js,css,html,svg,png,woff2,webmanifest}'],
       maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
-      navigateFallback: 'index.html'
+      navigateFallback: 'index.html',
+      navigateFallbackDenylist: [/\/docs(?:\/|$)/]
     }
   })],
   test: { include: ['tests/**/*.test.ts'] }

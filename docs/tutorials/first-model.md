@@ -58,7 +58,7 @@ Click **Save project**. Keep the `.pvo` download as **first-cube.pvo**; your bro
 
 One cube with Position X 0.25, Scale Y 1.5, and Rotation Y 15°.
 
-<a href="/tutorials/first-cube.pvo" download>Download the finished project</a>.
+<a href="./first-cube.pvo" download>Download the finished project</a>.
 
 ## If something looks different
 
