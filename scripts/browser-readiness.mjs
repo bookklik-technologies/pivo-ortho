@@ -26,7 +26,12 @@ async function snapshot(page){if(name==='pivo-ortho')return JSON.parse((await sa
 const add=async(browser,label,run)=>{try{await run();results.push({browser,label,passed:true});}catch(error){results.push({browser,label,passed:false,error:String(error)});throw error;}};
 try{for(const engineName of requested){let browser;
  try{
-  browser=await engines[engineName].launch({headless:true,...(engineName==='chromium'?{args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']}:{})});
+  // Linux CI runs Firefox under Xvfb so Mesa can provide a real WebGL context.
+  browser=await engines[engineName].launch({
+   headless:engineName!=='firefox'||process.env.PIVO_FIREFOX_HEADLESS!=='0',
+   ...(engineName==='chromium'?{args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']}:{}),
+   ...(engineName==='firefox'?{firefoxUserPrefs:{'webgl.disabled':false,'webgl.force-enabled':true}}:{}),
+  });
   const context=await browser.newContext({acceptDownloads:true,viewport:{width:1440,height:900}});const page=await context.newPage(),errors=[];page.setDefaultTimeout(15000);page.on('pageerror',error=>errors.push(error.message));page.on('dialog',dialog=>dialog.accept());
   await add(engineName,'production boot and native project round trip',async()=>{
    await page.goto(url,{waitUntil:'networkidle'});const file=await saved(page);assert.ok(file.bytes.length>100);
@@ -66,8 +71,10 @@ try{for(const engineName of requested){let browser;
   if(name!=='pivo-craft')await add(engineName,'WebGL loss retains backups and restoration resumes context',async()=>{
    const before=await snapshot(page);
    await page.evaluate(()=>{
-    const context=[...document.querySelectorAll('canvas')].map(canvas=>canvas.getContext('webgl2')??canvas.getContext('webgl')).find(gl=>gl&&gl.getExtension('WEBGL_lose_context'));
-    if(!context)throw Error('No WebGL loss extension available');
+    const contexts=[...document.querySelectorAll('canvas')].map(canvas=>canvas.getContext('webgl2')??canvas.getContext('webgl')).filter(Boolean);
+    if(!contexts.length)throw Error('No application WebGL context available; check Firefox graphics settings and the Xvfb display in Linux CI');
+    const context=contexts.find(gl=>gl.getExtension('WEBGL_lose_context'));
+    if(!context)throw Error('Application WebGL contexts do not expose WEBGL_lose_context');
     window.__lostGL=context;window.__lossExtension=context.getExtension('WEBGL_lose_context');
     window.__lostEvent=false;window.__restoredEvent=false;
     context.canvas.addEventListener('webglcontextlost',()=>{window.__lostEvent=true;},{once:true});
