@@ -5,7 +5,7 @@
 After the first manual publication:
 
 ```sh
-npm install pivo-ortho
+npm install @bookklik/pivo-ortho
 ```
 
 Node.js 24 or newer. This is an ESM-only package with bundled public TypeScript declarations. CommonJS require and a CLI/--headless switch are not supported; headless means the programmatic SDK below. Use dynamic import from CommonJS if needed. Library consumers do not need Vite, TypeScript loaders, a browser or the editor source tree.
@@ -14,17 +14,17 @@ Node.js 24 or newer. This is an ESM-only package with bundled public TypeScript 
 
 | Import | API |
 | --- | --- |
-| `pivo-ortho` | Combined portable core and IO |
-| `pivo-ortho/headless` | Alias of the combined API |
-| `pivo-ortho/core` | Data types, validation and editing |
-| `pivo-ortho/io` | Portable serialization/encoding/export |
+| `@bookklik/pivo-ortho` | Combined portable core and IO |
+| `@bookklik/pivo-ortho/headless` | Alias of the combined API |
+| `@bookklik/pivo-ortho/core` | Data types, validation and editing |
+| `@bookklik/pivo-ortho/io` | Portable serialization/encoding/export |
 
 Only documented entries are public. Source paths, lib chunks and editor internals are not exported. Generated declarations are included for each entry. Browser download/storage helpers are not exported by the SDK.
 
 ## Example
 
 ```js
-import { createProject, createPrimitive, exportOBJ, exportGLTF } from 'pivo-ortho/headless';
+import { createProject, createPrimitive, exportOBJ, exportGLTF } from '@bookklik/pivo-ortho/headless';
 import { writeFile, mkdir } from 'node:fs/promises';
 
 const project = createProject('Cube');

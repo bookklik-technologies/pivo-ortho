@@ -1,5 +1,5 @@
 {
-  "name": "pivo-ortho",
+  "name": "@bookklik/pivo-ortho",
   "description": "A local-first browser low-poly modeling, texturing and animation editor.",
   "version": "0.9.0",
   "license": "MIT",

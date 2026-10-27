@@ -8,7 +8,7 @@ A local-first browser low-poly modeling, texturing and animation editor.
 
 ## npm and headless SDK
 
-ESM library for Node.js 24+, with generated TypeScript declarations. After publication, install with `npm install pivo-ortho` and import from `pivo-ortho/headless`, `pivo-ortho/core` or `pivo-ortho/io`. No CLI or browser is required for the documented portable operations.
+ESM library for Node.js 24+, with generated TypeScript declarations. After publication, install with `npm install @bookklik/pivo-ortho` and import from `@bookklik/pivo-ortho/headless`, `@bookklik/pivo-ortho/core` or `@bookklik/pivo-ortho/io`. No CLI or browser is required for the documented portable operations.
 
 See [SDK usage, supported operations and manual publishing](docs/npm.md). Build with `npm run build:lib`; validate an isolated production install with `npm run check:consumer`. These commands do not run the unit suite.
 
