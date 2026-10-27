@@ -1,10 +1,10 @@
 {
   "name": "pivo-ortho",
   "description": "A local-first browser low-poly modeling, texturing and animation editor.",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "license": "MIT",
   "author": "a-hakim",
-  "private": true,
+  "private": false,
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
@@ -25,15 +25,16 @@
     "capture:predecessor": "node scripts/capture-predecessor.mjs",
     "test:upgrade": "node scripts/browser-upgrade.mjs",
     "test:standalone": "node scripts/browser-standalone.mjs",
-    "test:menus": "node scripts/browser-menus.mjs"
+    "test:menus": "node scripts/browser-menus.mjs",
+    "build:lib": "node scripts/build-library.mjs",
+    "check:package": "node scripts/check-package.mjs",
+    "check:consumer": "node scripts/check-consumer.mjs",
+    "prepack": "npm run build:lib && npm run check:package",
+    "prepublishOnly": "npm run check:dependencies",
+    "release:check": "npm run check:dependencies && npm run build && npm run docs:build && npm run build:lib && npm run check:package && npm run check:consumer"
   },
   "dependencies": {
-    "@fontsource-variable/outfit": "^5.3.0",
     "fflate": "0.8.3",
-    "gifenc": "^1.0.3",
-    "lucide-react": "^1.55.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
     "three": "^0.180.0",
     "pako": "2.2.0"
   },
@@ -43,18 +44,82 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@types/three": "^0.180.0",
-    "esbuild": "^0.28.2",
+    "esbuild": "0.28.2",
     "gifuct-js": "^2.1.2",
     "typescript": "^5.9.3",
     "vite": "7.3.7",
     "vite-plugin-pwa": "^2.0.0",
     "vitepress": "^1.6.4",
     "vitest": "5.0.4",
-    "@types/pako": "2.0.4"
+    "@types/pako": "2.0.4",
+    "@fontsource-variable/outfit": "^5.3.0",
+    "lucide-react": "^1.55.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "rollup": "4.65.1",
+    "rollup-plugin-dts": "6.5.1",
+    "gifenc": "^1.0.3"
   },
   "engines": {
-    "node": "24.x",
-    "npm": "11.x"
+    "node": ">=24"
   },
-  "packageManager": "npm@11.19.0"
+  "packageManager": "npm@11.19.0",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js",
+      "default": "./lib/index.js"
+    },
+    "./headless": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js",
+      "default": "./lib/index.js"
+    },
+    "./core": {
+      "types": "./lib/core.d.ts",
+      "import": "./lib/core.js",
+      "default": "./lib/core.js"
+    },
+    "./io": {
+      "types": "./lib/io.d.ts",
+      "import": "./lib/io.js",
+      "default": "./lib/io.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "LICENSE",
+    "README.md",
+    "docs/npm.md",
+    "THIRD_PARTY_NOTICES.txt"
+  ],
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bookklik-technologies/pivo-ortho.git"
+  },
+  "homepage": "https://bookklik-technologies.github.io/pivo-ortho/docs/",
+  "bugs": {
+    "url": "https://github.com/bookklik-technologies/pivo-ortho/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "keywords": [
+    "pivo",
+    "headless",
+    "3d",
+    "editor"
+  ],
+  "overrides": {
+    "fast-uri": "3.1.9",
+    "serialize-javascript": "7.1.3",
+    "vitepress": {
+      "vite": "6.4.5"
+    }
+  }
 }

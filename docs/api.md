@@ -1,5 +1,7 @@
 # Core & IO API
 
+For installed package imports, supported headless operations and release steps, see the [npm SDK guide](npm.md). The source paths below describe internal implementation, not public package subpaths.
+
 The engine is split into two framework-independent layers: `src/core` (no DOM, IO or UI dependencies) and `src/io` (pure encoders; only browser download paths require DOM). Both are runnable in Node/Vitest. Full behavioral details live in [CONTRACT.md](/CONTRACT).
 
 ## Core — `src/core/index.ts`

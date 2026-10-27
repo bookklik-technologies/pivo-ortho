@@ -9,3 +9,5 @@ tools/generate-examples.cjs
 dist-standalone/
 playwright-report/
 test-results/
+lib/
+*.tgz
