@@ -7,6 +7,7 @@ import { History, createProject, createPrimitive, uid } from '../core';
 import { validateProject } from '../core/validate';
 import { serializeProject, parseProject } from '../core/serialize';
 import { recovery, inspectRecovery, resolveRecovery } from './recovery';
+import { recoveryEnabled, assertRecoveryUpdateSafe } from './recovery-policy';
 import type { RecoveryEntry } from './suite-recovery';
 import type { Clip, Project } from '../core/types';
 
@@ -268,6 +269,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const timer = useRef<number | null>(null);
   const initialization = useRef<Promise<void> | null>(null);
   const flushRecovery = useCallback(async () => {
+    if (!recoveryEnabled) {
+      assertRecoveryUpdateSafe(JSON.stringify(stateRef.current.project) !== stateRef.current.savedSnapshot);
+      return;
+    }
     if (timer.current !== null) { clearTimeout(timer.current); timer.current = null; }
     await initialization.current;
     if (!recoveryReady.current) throw new Error('Recovery storage is unavailable');
@@ -297,7 +302,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
   useEffect(() => {
-    if (state.recoverySuspended || JSON.stringify(state.project) === state.savedSnapshot) return;
+    if (!recoveryEnabled || state.recoverySuspended || JSON.stringify(state.project) === state.savedSnapshot) return;
     timer.current = window.setTimeout(() => { void flushRecovery().catch(() => {}); }, SAVE_DEBOUNCE);
     return () => { if(timer.current !== null)clearTimeout(timer.current); };
   }, [state.project,state.recoverySuspended,flushRecovery]);
@@ -310,6 +315,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return () => { document.removeEventListener('visibilitychange',hidden);window.removeEventListener('pagehide',hidden);window.removeEventListener('beforeunload',unload); };
   }, [flushRecovery]);
   const restoreRecovery = async (entry:RecoveryEntry) => {
+    if (!recoveryEnabled) throw new Error('Browser recovery is disabled');
     if(typeof entry.data !== 'string')throw new Error('Recovery is not an Ortho project. Download its raw backup.');
     const restored = parseProject(entry.data);
     if(JSON.stringify(stateRef.current.project) !== stateRef.current.savedSnapshot && !confirm('Replace unsaved edits with this recovery copy? Download your current project first.'))return;
@@ -322,6 +328,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     dispatch({t:'setStatus',status:'Browser recovery restored. Download a .pvo backup.'});
   };
   const discardRecovery = async (entry:RecoveryEntry) => {
+    if (!recoveryEnabled) throw new Error('Browser recovery is disabled');
     await resolveRecovery(entry);await refreshRecovery();
     if(entry.id === `${recovery.session}:document`)dispatch({t:'clearRecovery'});
     dispatch({t:'setStatus',status:'Recovery copy discarded; current editing work is kept.'});

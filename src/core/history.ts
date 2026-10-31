@@ -16,9 +16,11 @@ export class History {
   private _current: Project;
   private limit: number;
   private costs = new WeakMap<Project,number>();
+  private committing = false;
 
   constructor(project: Project, limit = 50, private maxBytes = 128 * 1024 * 1024) {
-    if (limit < 1) throw new Error('history limit must be at least 1');
+    if (!Number.isSafeInteger(limit) || limit < 1) throw new Error('history limit must be a positive safe integer');
+    if (!Number.isFinite(maxBytes) || maxBytes < 1) throw new Error('history byte budget must be positive');
     this.limit = limit;
     serializeProject(project);
     this._current = deepClone(project);
@@ -51,16 +53,29 @@ export class History {
    * document; the previous state is pushed onto the undo stack.
    */
   commit(label: string, mutate: (draft: Project) => void): Project {
+    if (this.committing) throw new Error('History mutations cannot be nested');
     const draft = deepClone(this._current);
-    mutate(draft);
-    serializeProject(draft);
+    this.committing = true;
+    let committed: Project;
+    try {
+      const result: unknown = mutate(draft);
+      if (result !== null && (typeof result === 'object' || typeof result === 'function') && typeof (result as { then?: unknown }).then === 'function') {
+        void Promise.resolve(result).catch(() => {});
+        throw new Error('History mutations must be synchronous');
+      }
+      serializeProject(draft);
+      committed = deepClone(draft);
+    } finally {
+      this.committing = false;
+    }
     this.pushUndo({ label, project: this._current });
     this.future = [];
-    this._current = draft;
+    this._current = committed;
     return this._current;
   }
 
   undo(): Project {
+    if (this.committing) throw new Error('History mutations cannot be nested');
     const prev = this.past.pop();
     if (!prev) throw new Error('nothing to undo');
     this.future.push({ label: prev.label, project: this._current });
@@ -69,6 +84,7 @@ export class History {
   }
 
   redo(): Project {
+    if (this.committing) throw new Error('History mutations cannot be nested');
     const next = this.future.pop();
     if (!next) throw new Error('nothing to redo');
     this.past.push({ label: next.label, project: this._current });
@@ -78,6 +94,7 @@ export class History {
 
   /** Replace the document (load/new); history resets intentionally. */
   reset(project: Project): void {
+    if (this.committing) throw new Error('History mutations cannot be nested');
     serializeProject(project);
     this.past = [];
     this.future = [];

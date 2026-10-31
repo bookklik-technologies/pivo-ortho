@@ -1,4 +1,7 @@
 import { MAX_PROJECT_BYTES } from '../core/validate';
+import { recoveryEnabled, embeddedMode } from './recovery-policy';
+import './embed.css';
+if(embeddedMode)document.documentElement.dataset.pivoEmbedded='true';
 import {installDisclosureMenus,installDockToggle,installAppMenuNavigation} from './suite';
 import logo from '../../logo.svg?url';
 import {SuiteMenu,SuiteTabs,SuiteResize,DockPortal} from './suite-components';
@@ -100,7 +103,7 @@ function Header({paintTab,onPaintTab,onResetViews}:{paintTab:string;onPaintTab:(
     <header className="app-header suite-header">
       <h1 className="suite-brand"><img src={logo} alt=""/>PiVo Ortho</h1>
       <nav ref={menusRef} className="suite-menus" aria-label="Application menus">
-        <SuiteMenu label="File"><button onClick={newProject}>New project…</button><button aria-label="Open project" onClick={()=>fileRef.current?.click()}>Open project…</button><button onClick={save}>Save project</button><button onClick={()=>dispatch({t:'setDialog',dialog:'exports'})}>Export…</button><button onClick={()=>{void refreshRecovery().catch(error=>dispatch({t:'setStatus',status:String(error)}));dispatch({t:'setDialog',dialog:'recovery'});}}>Recovery…</button></SuiteMenu>
+        <SuiteMenu label="File"><button onClick={newProject}>New project…</button><button aria-label="Open project" onClick={()=>fileRef.current?.click()}>Open project…</button><button onClick={save}>Save project</button><button onClick={()=>dispatch({t:'setDialog',dialog:'exports'})}>Export…</button><button disabled={!recoveryEnabled} onClick={()=>{void refreshRecovery().catch(error=>dispatch({t:'setStatus',status:String(error)}));dispatch({t:'setDialog',dialog:'recovery'});}}>Recovery…</button></SuiteMenu>
         <SuiteMenu label="Edit"><button disabled={!history?.canUndo} onClick={doUndo}>Undo</button><button disabled={!history?.canRedo} onClick={doRedo}>Redo</button></SuiteMenu>
         <SuiteMenu label="View"><button onClick={()=>document.querySelector<HTMLButtonElement>('.suite-dock-toggle')?.click()}>Toggle panels</button><button onClick={useSystem}>System appearance</button><button disabled={theme==='light'} onClick={()=>{setTheme('light');applyTheme('light');saveTheme('light');}}>Light appearance</button><button disabled={theme==='dark'} onClick={()=>{setTheme('dark');applyTheme('dark');saveTheme('dark');}}>Dark appearance</button><hr className="suite-menu-separator"/><button onClick={onResetViews}>Reset workspace views</button><button onClick={()=>dispatch({t:'setLayout',layout:state.viewLayout==='quad'?'persp':'quad'})}>Four views / maximize 3D</button><button onClick={()=>document.querySelector('.app')?.classList.toggle('suite-diagnostics')}>Technical diagnostics</button></SuiteMenu>
         <SuiteMenu label="Help"><button onClick={()=>dispatch({t:'setDialog',dialog:'shortcuts'})}>Keyboard shortcuts…</button><button onClick={()=>dispatch({t:'setDialog',dialog:'about'})}>About PiVo Ortho</button><hr className="suite-menu-separator"/><button onClick={()=>dispatch({t:'setDialog',dialog:'help'})}>Usage help…</button></SuiteMenu>
@@ -119,7 +122,7 @@ function Header({paintTab,onPaintTab,onResetViews}:{paintTab:string;onPaintTab:(
       <div className="ortho-mode-tabs"><SuiteTabs label="Work mode" values={[{id:'model',label:'Model',icon:<IconCube/>},{id:'paint',label:'Paint',icon:<IconPaint/>},{id:'animate',label:'Animate',icon:<IconPlay/>}]} active={state.mode} onChange={mode=>dispatch({t:'setMode',mode:mode as Mode})}/></div><select className="ortho-mode-select" aria-label="Work mode (compact)" value={state.mode} onChange={e=>dispatch({t:'setMode',mode:e.target.value as Mode})}>{(['model','paint','animate'] as Mode[]).map(mode=><option key={mode} value={mode}>{mode[0].toUpperCase()+mode.slice(1)}</option>)}</select>
       {state.mode==='paint'&&<SuiteTabs label="Paint workspace" values={[{id:'texture',label:'Texture'},{id:'uv',label:'UV'}]} active={paintTab} onChange={onPaintTab}/>}
       <div className="suite-document-meta"><span className="suite-document-name" title={project.name}>{project.name}</span>
-      <span className="suite-save-state" role="status">{dirty?'Unsaved edits':state.savedSource==='opened'?'Project opened':state.savedSource==='downloaded'?'Project downloaded':'Sample document'} · {recovery==='stored'?'Browser recovery stored':recovery==='unavailable'?'Recovery unavailable':recovery==='cleared'?'Recovery cleared':'Recovery pending'}</span></div>
+      <span className="suite-save-state" role="status">{dirty?'Unsaved edits':state.savedSource==='opened'?'Project opened':state.savedSource==='downloaded'?'Project downloaded':'Sample document'} · {!recoveryEnabled?'Browser recovery disabled':recovery==='stored'?'Browser recovery stored':recovery==='unavailable'?'Recovery unavailable':recovery==='cleared'?'Recovery cleared':'Recovery pending'}</span></div>
       <button className="suite-dock-toggle" aria-controls="ortho-dock" aria-expanded="false" ref={dockToggleRef}>Panels</button>
     </div>
   </>;

@@ -1,7 +1,7 @@
 {
   "name": "@bookklik/pivo-ortho",
   "description": "A local-first browser low-poly modeling, texturing and animation editor.",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "license": "MIT",
   "author": "a-hakim",
   "private": false,
@@ -11,6 +11,7 @@
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "test:browser": "node scripts/browser-readiness.mjs",
+    "test:embed": "node scripts/browser-embed.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "docs:dev": "npm run docs:build && node scripts/preview-docs.mjs",
     "docs:build": "vitepress build docs",
@@ -116,6 +117,8 @@
     "editor"
   ],
   "overrides": {
+    "glob": "14.0.3",
+    "minimatch": "11.0.1",
     "fast-uri": "3.1.9",
     "serialize-javascript": "7.1.3",
     "vitepress": {
